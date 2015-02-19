@@ -1,0 +1,12 @@
+[submodule "blingbling"]
+	path = blingbling
+	url = https://github.com/cedlemo/blingbling
+[submodule "vicious"]
+	path = vicious
+	url = https://github.com/Mic92/vicious
+[submodule "tyrannical"]
+	path = tyrannical
+	url = https://github.com/Elv13/tyrannical
+[submodule "lain"]
+	path = lain
+	url = https://github.com/copycat-killer/lain
