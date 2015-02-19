@@ -1,0 +1,11 @@
+# Packages needed
+awesome
+pulseaudio
+pavucontrol
+
+# Awesome plugins
+APW         # volume management with PulseAudio and pavucontrol
+blingbling  # calendar and clock
+tyrannical  # tags management
+vicious
+lain  # calendar
