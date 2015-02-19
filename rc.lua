@@ -245,10 +245,10 @@ menubar.utils.terminal = terminal -- Set the terminal for applications that requ
 
 -- {{{ Logout Menu
 logoutmenu = blingbling.system.mainmenu(beautiful.menu_shutdown, 
-                beautiful.blingbling.menu_shutdown,
-                beautiful.blingbling.menu_reboot,
-                beautiful.blingbling.menu_logout,
-                beautiful.blingbling.menu_lock) 
+                beautiful.menu_shutdown,
+                beautiful.menu_reboot,
+                beautiful.menu_logout,
+                beautiful.menu_lock) 
 -- }}}
 
 -- {{{ Wibox
