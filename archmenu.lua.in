@@ -1,0 +1,17 @@
+
+-- Create `archmenu.lua` with xdg-menu : "https://www.archlinux.org/packages/community/any/archlinux-xdg-menu/"
+-- Otherwise create your own menu tables following the scheme:
+--     submenu1 = { {<entry name>, <command>, <icon>}}
+--     xdgmenu = {{<submenu name>, submenu1}}
+
+ local menu52dd1c847264a75f400961bfb4d1c849 = {
+     {"DeaDBeeF", "deadbeef ", "/usr/share/icons/hicolor/16x16/apps/deadbeef.png" },
+     {"PulseAudio Manager", "paman", "/usr/share/icons/gnome/16x16/devices/audio-card.png" },
+     {"VLC media player", "/usr/bin/vlc --started-from-file ", "/usr/share/icons/hicolor/16x16/apps/vlc.png" },
+ }
+
+
+xdgmenu = {
+    {"Sound & Video", menu52dd1c847264a75f400961bfb4d1c849}
+}
+
