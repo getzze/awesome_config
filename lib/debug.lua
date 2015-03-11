@@ -4,7 +4,8 @@ local getmetatable  = getmetatable
 local beautiful     = require("beautiful")
 
 local capi = {
-    client = client
+    client = client,
+    mouse  = mouse
 }
 
 local colors = {
@@ -34,7 +35,7 @@ local function client_info(c)
     v = string.format('<span color="%s">', colors.header) .. v .. " @ " .. cc.width .. 'x' .. cc.height .. signx .. cc.x .. signy .. cc.y .. "</span>\n\n"
 
     local inf = {
-        "name", "icon_name", "type", "class", "role", "instance", "pid",
+            "name", "icon_name", "type", "class", "overwrite_class", "role", "instance", "pid",
         "skip_taskbar", "id", "group_window", "leader_id", "machine",
         "screen", "hidden", "minimized", "size_hints_honor", "titlebar", "urgent",
         "focus", "opacity", "ontop", "above", "below", "fullscreen", "transient_for",
@@ -162,7 +163,135 @@ function loadrc(name, mod)
     return result
 end
 
+-- Compatibility layer to load Lua code from prompt
+local function load_code(code, environment)
+    if setfenv and loadstring then
+        local f, err = loadstring("return "..code)
+        if not f then
+            f, err = loadstring(s);
+        end
+        setfenv(f, environment)
+        return f, err
+    else    -- Lua > 5.2
+        local f, err = load("return "..code, nil, "t", environment)
+        if not f then
+            f, err = load(code, nil, "t", environment)
+        end
+        return f, err
+    end
+end
 
+function lua_eval(s)
+    local context = {}        -- create new environment
+    setmetatable(context, {__index = _G})
+    local f, err = load_code(s, context)
+
+	if f then
+		local ret = { pcall(f) };
+		if ret[1] then
+			-- Ok
+			table.remove(ret, 1)
+			local highest_index = #ret;
+			for k, v in pairs(ret) do
+				if type(k) == "number" and k > highest_index then
+					highest_index = k;
+				end
+				ret[k] = select(2, pcall(tostring, ret[k])) or "<no value>";
+			end
+			-- Fill in the gaps
+			for i = 1, highest_index do
+				if not ret[i] then
+					ret[i] = "nil"
+				end
+			end
+			if highest_index > 0 then
+				naughty.notify({ title=">>> "..s, text = awful.util.escape(">: "..tostring(table.concat(ret, ", "))) , screen = capi.mouse.screen });
+                --mypromptbox[capi.mouse.screen].text = awful.util.escape("Result"..(highest_index > 1 and "s" or "")..": "..tostring(table.concat(ret, ", ")));
+			else
+                naughty.notify({ title=">>> "..s, text=">: " , screen = capi.mouse.screen });
+				--mypromptbox[capi.mouse.screen].text = "Result: Nothing";
+			end
+		else
+			err = ret[2];
+		end
+	end
+	if err then
+        naughty.notify({ title=">>> "..s, text=awful.util.escape(">: [Error] "..tostring(err)) , screen = capi.mouse.screen })
+		--mypromptbox[capi.mouse.screen].text = awful.util.escape("Error: "..tostring(err));
+	end
+end
+
+function lua_completion (line, cur_pos, ncomp)
+    -- Only complete at the end of the line, for now
+    if cur_pos ~= #line + 1 then
+        return line, cur_pos
+    end
+    
+    -- We're really interested in the part following the last (, [, comma or space
+    local lastsep = #line - (line:reverse():find('[[(, ]') or #line)
+    local lastidentifier
+    if lastsep ~= 0 then
+        lastidentifier = line:sub(lastsep + 2)
+    else
+        lastidentifier = line
+    end
+    
+    local environment = _G
+    
+    -- String up to last dot is our current environment
+    local lastdot = #lastidentifier - (lastidentifier:reverse():find('.', 1, true) or #lastidentifier)
+    if lastdot ~= 0 then
+        -- We have an environment; for each component in it, descend into it
+        for env in lastidentifier:sub(1, lastdot):gmatch('([^.]+)') do
+            if not environment[env] then
+                -- Oops, no such subenvironment, bail out
+                return line, cur_pos
+            end
+            environment = environment[env]
+        end
+    end
+    
+    local tocomplete = lastidentifier:sub(lastdot + 1)
+    if tocomplete:sub(1, 1) == '.' then
+        tocomplete = tocomplete:sub(2)
+    end
+    
+    local completions = {}
+    for k, v in pairs(environment) do
+        if type(k) == "string" and k:sub(1, #tocomplete) == tocomplete then
+            table.insert(completions, k)
+        end
+    end
+    
+    if #completions == 0 then
+        return line, cur_pos
+    end
+    
+    while ncomp > #completions do
+        ncomp = ncomp - #completions
+    end
+    
+    local str = ""
+    if lastdot + lastsep ~= 0 then
+        str = line:sub(1, lastsep + lastdot + 1)
+    end
+    str = str .. completions[ncomp]
+    cur_pos = #str + 1
+    return str, cur_pos
+end
+
+-- @param prompt: a awful.widget.prompt() object
+function lua_prompt(prompt)
+    local textbox = prompt.widget
+    local function f ()
+        awful.prompt.run({ prompt = "Run Lua code: " },
+            textbox,
+            lua_eval,
+            lua_completion,
+            awful.util.getdir("cache") .. "/history_eval")
+    end
+    return f
+end
 
 local dbg =
 {
@@ -170,6 +299,7 @@ local dbg =
     colors      = colors,
     loadrc      = loadrc,
     --info        = info,
+    lua_prompt  = lua_prompt,
     client_info = client_info
 }
 return dbg

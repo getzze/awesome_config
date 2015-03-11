@@ -17,6 +17,7 @@ local xdg_menu = require("archmenu")
 -- Dynamic tagging library
 --local shifty = require("awesome-shifty")
 local tyrannical = require("tyrannical")
+local tagctl     = require("lib/tagctl")
 -- apw - pulseaudio integration
 local APW = require("apw/widget")
 -- Other widgets and layout library
@@ -438,55 +439,10 @@ for s = 1, screen.count() do
 end
 -- }}}
 
-
---tag rename (from shifty)
---@param tag: tag object to be renamed
---@param prefix: if any prefix is to be added
---@param no_selectall:
-function tag_rename(tag, prefix, no_selectall)
-    local theme = beautiful.get()
-    local t = tag or awful.tag.selected(mouse.screen)
-
-    if t == nil then return end
-
-    local scr = awful.tag.getscreen(t)
-    local bg = nil
-    local fg = nil
-    local text = prefix or t.name
-    local before = t.name
-
-    if t == awful.tag.selected(scr) then
-        bg = theme.bg_focus or '#535d6c'
-        fg = theme.fg_urgent or '#ffffff'
-    else
-        bg = theme.bg_normal or '#222222'
-        fg = theme.fg_urgent or '#ffffff'
-    end
-    
-    local tag_index = tag2index(scr, t)
-    -- Access to textbox widget in taglist
-    local tb_widget = mytaglist[scr].widgets[tag_index].widget.widgets[2].widget
-    awful.prompt.run({
-        fg_cursor = fg, bg_cursor = bg, ul_cursor = "single",
-        text = text, selectall = not no_selectall},
-        tb_widget,
-        function (name) if name:len() > 0 then t.name = name; end end,
-        completion,
-        awful.util.getdir("cache") .. "/history_tags",
-        nil,
-        function ()
-            if t.name == before then
-                if awful.tag.getproperty(t, "initial") then awful.tag.delete(t) end
-            else
-                awful.tag.setproperty(t, "initial", true)
-                set(t)
-            end
-            tagkeys(screen[scr])
-            t:emit_signal("property::name")
-        end
-        )
-end
-
+-- Set prompt and taglist for the tag control
+tagctl.set_prompt(myprompbox)
+tagctl.set_taglist(mytaglist)
+tagctl.settings.prompt = myprompbox
 
 -- {{{ Mouse bindings
 root.buttons(awful.util.table.join(
@@ -508,17 +464,19 @@ globalkeys = awful.util.table.join(
     awful.key({ modkey, "Shift"   }, "q", awesome.quit,     "Awesome quit"      ),
     -- Prompt
     awful.key({ modkey },            "r",     function () mypromptbox[mouse.screen]:run() end, "Prompt"),
+    -- Lua prompt
+    awful.key({ modkey }, "l", dbg.lua_prompt(mypromptbox[mouse.screen]), "Lua prompt"),
+    --awful.key({ modkey }, "x", 
+            --function ()
+                --awful.prompt.run({ prompt = "Run Lua code: " },
+                    --mypromptbox[mouse.screen].widget,
+                    --awful.util.eval, nil,
+                    --awful.util.getdir("cache") .. "/history_eval")
+            --end, "Lua prompt"),
 
-    --awful.key({ modkey }, "x",
-              --function ()
-                  --awful.prompt.run({ prompt = "Run Lua code: " },
-                  --mypromptbox[mouse.screen].widget,
-                  --awful.util.eval, nil,
-                  --awful.util.getdir("cache") .. "/history_eval")
-              --end, "Lua prompt"),
     -- Menubar
-    awful.key({ modkey }, "p", function() menubar.show() end,                  "Show app menu"     ),
-    awful.key({ modkey,           }, "w", function () mymainmenu:toggle() end, "Show main menu"    ),
+    awful.key({ modkey }, "p", function () menubar.show() end         , "Show app menu"     ),
+    awful.key({ modkey }, "w", function () mymainmenu:toggle() end    , "Show main menu"    ),
 
 
     -- Tag view
@@ -528,61 +486,9 @@ globalkeys = awful.util.table.join(
     awful.key({ modkey,           }, "z", awful.tag.history.restore, "Last opened tag" ),
 
     -- Tag control
-    -- -- delete tag
-    awful.key({ modkey, "Control" }, "d",
-            function () 
-               -- table.remove(tags, awful.tag.selected(mouse.screen).name )
-                awful.tag.delete()
-            end,
-            "Delete tag"   ),
-
-    -- -- add new tag
-   awful.key({ modkey, "Control" }, "a",
-        function ()
-            awful.prompt.run(
-                    { prompt = "New tag name: " },
-                    mypromptbox[mouse.screen].widget,
-                    function(new_name)
-                        if not new_name or #new_name == 0 then
-                            return
-                        else
-                            props = {selected = true}
-                            t = awful.tag.add(new_name, props)
-                            tags[mouse.screen][#tags[mouse.screen]+1]=t
-                            awful.tag.viewonly(t)
-                        end
-                    end)
-        end,
-        "Add tag"   ),
-
-     -- -- rename tag
-    awful.key({ modkey, "Control" }, "w",
-        function ()
-            awful.prompt.run(
-                    { prompt = "New tag name: " },
-                    mypromptbox[mouse.screen].widget,
-                    function(new_name)
-                        if not new_name or #new_name == 0 then
-                            return
-                        else
-                            local screen = mouse.screen
-                            local tag = awful.tag.selected(screen)
-                            if tag then
-                                tag.name = new_name
-                            end
-                        end
-                    end)
-        end,
-        "Rename tag"   ),
-
-   -- -- list tags
-    --awful.key( { modkey, "Control" }, "c",
-        --function ()
-            --local screen = mouse.screen
-            --local tag = awful.tag.gettags(screen)
-        --end,
-        --"List tags"  ),
-
+    awful.key({ modkey, "Control" }, "d",      function () awful.tag.delete() end           , "Delete tag" ),
+    awful.key({ modkey, "Control" }, "a",      function () tagctl.add(mypromptbox) end      , "Add tag"    ),
+    awful.key({ modkey, "Control" }, "w",      function () tagctl.rename(mypromptbox) end   , "Rename tag" ),
 
     -- Layout manipulation
     keydoc.group("Layout manipulation"),
@@ -605,18 +511,36 @@ globalkeys = awful.util.table.join(
     -- Client manipulation
     keydoc.group("Window manipulation"),
     -- Implement Alt-Tab
-    awful.key({ altkey            }, "Tab",
-            function ()
-                awful.client.focus.byidx( 1)
-                if client.focus then client.focus:raise() end
-            end,
-            "Next client"  ),
+    --awful.key({ altkey            }, "Tab",
+            --function ()
+                --awful.client.focus.byidx( 1)
+                --if client.focus then client.focus:raise() end
+            --end,
+            --"Next client"  ),
+    --awful.key({ altkey, "Shift"   }, "Tab",
+            --function ()
+                --awful.client.focus.byidx(-1)
+                --if client.focus then client.focus:raise() end
+            --end,
+            --"Previous client"  ),
+    awful.key({ altkey,           }, "Tab",
+        function ()
+            awful.client.focus.history.previous()
+            if client.focus then
+                client.focus:raise()
+            end
+        end,
+        "Last opened client"
+        ),
     awful.key({ altkey, "Shift"   }, "Tab",
-            function ()
-                awful.client.focus.byidx(-1)
-                if client.focus then client.focus:raise() end
-            end,
-            "Previous client"  ),
+        function ()
+            awful.client.focus.history.next()
+            if client.focus then
+                client.focus:raise()
+            end
+        end,
+        "Next opened client"
+        ),
 
     awful.key({ modkey,           }, "j",
         function ()
@@ -630,15 +554,6 @@ globalkeys = awful.util.table.join(
         end),
 
     awful.key({ modkey,           }, "u", awful.client.urgent.jumpto,   "Focus on urgent client"  ),
-    awful.key({ modkey,           }, "Tab",
-        function ()
-            awful.client.focus.history.previous()
-            if client.focus then
-                client.focus:raise()
-            end
-        end,
-        "Last opened client"
-        ),
     
     -- Volume and display
     keydoc.group("Volume and display"),
@@ -758,12 +673,19 @@ root.keys(globalkeys)
 -- {{{ Rules
 awful.rules.rules = {
     -- All clients will match this rule.
-    { rule = { },
-      properties = { border_width = beautiful.border_width,
-                     border_color = beautiful.border_normal,
-                     focus = awful.client.focus.filter,
-                     keys = clientkeys,
-                     buttons = clientbuttons } }
+    {   rule = { },
+        properties = { border_width = beautiful.border_width,
+                    border_color = beautiful.border_normal,
+                    focus = awful.client.focus.filter,
+                    keys = clientkeys,
+                    buttons = clientbuttons }
+    },
+    -- Tyrannical: match matplotlib figures using the `overwrite_class` feature
+    {   rule = { class = "", name = "Figure %d"  },
+        callback = function(c)
+                awful.client.property.set(c, "overwrite_class", "mpl")
+            end
+    } 
 }
 -- }}}
 
@@ -856,9 +778,10 @@ client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_n
 -- Startup programs
 awful.util.spawn("setxkbmap int")
 ro.run_once(terminal)
-ro.run_once("cbatticon","-i symbolic -x xfce4-power-manager-settings")
+ro.run_once("cbatticon","-u 30 -i symbolic -x gnome-power-statistics")
 ro.run_once("synapse","--startup")
-ro.run_once("xfce4-power-manager")
+--ro.run_once("xfce4-power-manager")
+ro.run_once("caffeine")
 ro.run_once("nm-applet","--sm-disable")
 ro.run_once("davmail", nil, "java")
 --run_once("davmail")
