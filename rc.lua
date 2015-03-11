@@ -511,19 +511,19 @@ globalkeys = awful.util.table.join(
     -- Client manipulation
     keydoc.group("Window manipulation"),
     -- Implement Alt-Tab
-    --awful.key({ altkey            }, "Tab",
-            --function ()
-                --awful.client.focus.byidx( 1)
-                --if client.focus then client.focus:raise() end
-            --end,
-            --"Next client"  ),
-    --awful.key({ altkey, "Shift"   }, "Tab",
-            --function ()
-                --awful.client.focus.byidx(-1)
-                --if client.focus then client.focus:raise() end
-            --end,
-            --"Previous client"  ),
-    awful.key({ altkey,           }, "Tab",
+    awful.key({ altkey            }, "Tab",
+            function ()
+                awful.client.focus.byidx( 1)
+                if client.focus then client.focus:raise() end
+            end,
+            "Next client"  ),
+    awful.key({ altkey, "Shift"   }, "Tab",
+            function ()
+                awful.client.focus.byidx(-1)
+                if client.focus then client.focus:raise() end
+            end,
+            "Previous client"  ),
+    awful.key({ modkey,           }, "Tab",
         function ()
             awful.client.focus.history.previous()
             if client.focus then
@@ -531,15 +531,6 @@ globalkeys = awful.util.table.join(
             end
         end,
         "Last opened client"
-        ),
-    awful.key({ altkey, "Shift"   }, "Tab",
-        function ()
-            awful.client.focus.history.next()
-            if client.focus then
-                client.focus:raise()
-            end
-        end,
-        "Next opened client"
         ),
 
     awful.key({ modkey,           }, "j",
