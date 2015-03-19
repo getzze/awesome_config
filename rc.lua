@@ -9,6 +9,7 @@ require("awful.autofocus")
 local wibox = require("wibox")
 -- Theme handling library
 local beautiful = require("beautiful")
+--beautiful.init(awful.util.getdir("config") .. "/themes" .. "/japanese2" .. "/theme.lua")
 -- Notification library
 local naughty = require("naughty")
 -- Applications menu
@@ -32,6 +33,9 @@ local xrandr = require("lib/xrandr")
 local dbg = require("lib/debug")
 -- Run programs once
 local ro = require("lib/run_once")
+-- Shutdown widget
+local shutdown = require("lib/shutdown")
+
 
 -- {{{ Error handling
 require("lib/errors")
@@ -41,10 +45,10 @@ require("lib/errors")
 -- {{{ Variable definitions
 -- Themes define colours, icons, and wallpapers
 local home_dir = os.getenv("HOME")
-local themes_dir = home_dir .. "/.config/awesome/themes"
+local config_dir = awful.util.getdir("config")
+local themes_dir = config_dir .. "/themes"
 local theme_dir = themes_dir .. "/japanese2"
 beautiful.init(theme_dir .. "/theme.lua")
---beautiful.init("/usr/share/awesome/themes/default/theme.lua")
 
 
 -- This is used later as the default terminal and editor to run.
@@ -164,14 +168,19 @@ tyrannical.tags = {
     } ,
     {
         name        = "doc",
-        init        = false, -- This tag wont be created at startup, but will be when one of the
-                             -- client in the "class" section will start. It will be created on
-                             -- the client startup screen
+        init        = false, 
         no_focus_stealing_out = true,
         layout      = awful.layout.suit.max,
         class       = {
             "Assistant"     , "Okular"         , "Evince"    , "EPDFviewer"   , "xpdf",
             "Xpdf"          , "Mupdf"             }
+    } ,
+    {
+        name        = "mpl",
+        init        = false, 
+        exclusive   = false,
+        no_focus_stealing_out = true,
+        class       = { "mpl"  }
     } ,
     --{
         --name        = "conky",
@@ -462,6 +471,7 @@ globalkeys = awful.util.table.join(
     awful.key({ modkey,           }, "Return", function () awful.util.spawn(terminal) end,  "Spawn terminal"),
     awful.key({ modkey, "Control" }, "r", awesome.restart,  "Awesome restart"   ),
     awful.key({ modkey, "Shift"   }, "q", awesome.quit,     "Awesome quit"      ),
+    awful.key({ modkey, "Control" }, "q", shutdown.logout_dialog_menu,     "Shutdown window"      ),
     -- Prompt
     awful.key({ modkey },            "r",     function () mypromptbox[mouse.screen]:run() end, "Prompt"),
     -- Lua prompt
