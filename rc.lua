@@ -9,7 +9,6 @@ require("awful.autofocus")
 local wibox = require("wibox")
 -- Theme handling library
 local beautiful = require("beautiful")
---beautiful.init(awful.util.getdir("config") .. "/themes" .. "/japanese2" .. "/theme.lua")
 -- Notification library
 local naughty = require("naughty")
 -- Applications menu
@@ -105,7 +104,7 @@ tyrannical.tags = {
         name        = "term",                 -- Call the tag "Term"
         init        = true,                   -- Load the tag on startup
         exclusive   = true,                   -- Refuse any other type of clients (by classes)
-        screen      = {1,2},                  -- Create this tag on screen 1 and screen 2
+        screen      = 1,                  -- Create this tag on screen 1 and screen 2
         layout      = awful.layout.suit.tile, -- Use the tile layout
         selected    = true,
         class       = { --Accept the following classes, refuse everything else (because of "exclusive=true")
@@ -136,7 +135,7 @@ tyrannical.tags = {
         name        = "files",
         init        = false,
         exclusive   = true,
-        screen      = 1,
+        screen      = {1, 2},
         layout      = awful.layout.suit.max,
         --exec_once   = {file_manager}, --When the tag is accessed for the first time, execute this command
         class  = {
@@ -148,8 +147,8 @@ tyrannical.tags = {
         init        = false,
         exclusive   = true,
         screen      = 1,
-        --clone_on    = 2, -- Create a single instance of this tag on screen 1, but also show it on screen 2
-                         ---- The tag can be used on both screen, but only one at once
+        clone_on    = 2, -- Create a single instance of this tag on screen 1, but also show it on screen 2
+                         -- The tag can be used on both screen, but only one at once
         layout      = awful.layout.suit.max                          ,
         class ={ 
             "Kate", "KDevelop", "Codeblocks", "Code::Blocks" , "DDD", "kate4", "geany"}

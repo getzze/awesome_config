@@ -117,7 +117,8 @@ end
 local function create_menu ()
     local settings = deepcopy(system.settings)
     --local c = deepcopy(system.commands)
-    local c = deepcopy(system.commands) or default_commands()
+    --local c = deepcopy(system.commands) or default_commands()
+    local c = default_commands()
     -- Add `cancel` option
     table.insert(c, {"--------", nil})
     table.insert(c, {"cancel", function () end})

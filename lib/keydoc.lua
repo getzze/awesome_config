@@ -11,8 +11,9 @@ local beautiful = require("beautiful")
 local naughty   = require("naughty")
 
 local capi      = {
-   root = root,
-   client = client
+   root   = root,
+   client = client,
+   mouse  = mouse
 }
 
 local settings = {
@@ -138,7 +139,7 @@ end
 -- Display help in a naughty notification
 local nid = nil
 function display()
-
+    local s = capi.mouse.screen
     local strings = markup(awful.util.table.join(
         capi.root.keys(),
         capi.client.focus and capi.client.focus:keys() or {}))
@@ -154,7 +155,8 @@ function display()
     nid = naughty.notify({ text = result,
 			replaces_id = nid,
 			hover_timeout = 0.1,
-			timeout = 30 }).id
+			timeout = 30,
+            screen = s}).id
 end
 
 local keydoc =
