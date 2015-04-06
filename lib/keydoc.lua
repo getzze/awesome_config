@@ -17,14 +17,22 @@ local capi      = {
 }
 
 local settings = {
+    color_group  = "#b9214f",   -- red
+    color_keys   = "#77DFD8",   -- cyan
+    color_doc    = "#E0E0D1",   -- white
     font = "DejaVu Sans Mono 10"
 }
 
-local colors = {
-    group  = beautiful.keydoc_color_group or "#b9214f",   -- red
-    keys   = beautiful.keydoc_color_keys or "#77DFD8",    -- cyan
-    doc    = beautiful.keydoc_color_doc or "#E0E0D1"      -- white
-}
+local function get_styles(styles)
+	local res = {
+		color_group = beautiful.keydoc_color_group or styles.color_group or settings.color_group or "#b9214f",   -- red
+		color_keys  = beautiful.keydoc_color_keys or styles.color_keys or settings.color_keys or "#77DFD8",    -- cyan
+		color_doc   = beautiful.keydoc_color_doc or styles.color_doc or settings.color_doc or "#E0E0D1",      -- white
+		font = styles.font or settings.font or "DejaVu Sans Mono 10"
+	}
+	return res
+end
+
 
 local doc = { }
 local currentgroup = "Misc"
@@ -86,12 +94,13 @@ function group(name)
 end
 
 local function markup(keys)
+    local styles = get_styles()
     local result = {}
     
     -- Compute longest key combination
     local longest = 0
     for _, key in ipairs(keys) do
-        if doc[key] then
+        if keydoc.__real[key] then
             longest = math.max(longest, unilen(key2str(key)))
         end
     end
@@ -102,9 +111,9 @@ local function markup(keys)
             local help, group = doc[key].help, doc[key].group
             local skey = key2str(key)
             result[group] = (result[group] or "") ..
-                        string.format('<span font="%s"', settings.font) .. string.format(' color="%s"> ', colors.doc) ..
+                        string.format('<span font="%s"', styles.font) .. string.format(' color="%s"> ', styles.color_doc) ..
                         string.format("%" .. (longest - unilen(skey)) .. "s  ", "") .. skey ..
-                        '</span>  <span color="' .. colors.keys .. '">' .. 
+                        '</span>  <span color="' .. styles.color_keys .. '">' .. 
                         help .. '</span>\n'
         end
     end
@@ -114,32 +123,33 @@ end
 -- Customize version of standard function pairs that sort keys
 -- (from Michal Kottman on Stackoverflow)
 function spairs(t, order)
-  -- collect the keys
-  local keys = {}
-  for k in pairs(t) do keys[#keys+1] = k end
+	-- collect the keys
+	local keys = {}
+	for k in pairs(t) do keys[#keys+1] = k end
 
-  -- if order function given, sort by it by passing the table and keys a, b,
-  -- otherwise just sort the keys 
-  if order then
-    table.sort(keys, function(a,b) return order(t, a, b) end)
-  else
-    table.sort(keys)
-  end
+	-- if order function given, sort by it by passing the table and keys a, b,
+	-- otherwise just sort the keys 
+	if order then
+		table.sort(keys, function(a,b) return order(t, a, b) end)
+	else
+		table.sort(keys)
+	end
 
-  -- return the iterator function
-  local i = 0
-  return function()
-    i = i + 1
-    if keys[i] then
-      return keys[i], t[keys[i]]
-    end
-  end
+	-- return the iterator function
+	local i = 0
+	return function()
+		i = i + 1
+		if keys[i] then
+			return keys[i], t[keys[i]]
+		end
+	end
 end
 
 -- Display help in a naughty notification
 local nid = nil
 function display()
     local s = capi.mouse.screen
+    local styles = get_styles()
     local strings = markup(awful.util.table.join(
         capi.root.keys(),
         capi.client.focus and capi.client.focus:keys() or {}))
@@ -148,7 +158,7 @@ function display()
     for group, res in spairs(strings) do
         if #result > 0 then result = result .. "\n" end
         result = result ..
-            '<span weight="bold" color="' .. colors.group .. '">' ..
+            '<span weight="bold" color="' .. styles.color_group .. '">' ..
             group .. "</span>\n" .. res
     end
 
@@ -162,7 +172,6 @@ end
 local keydoc =
 {
     settings = settings,
-    colors   = colors,
     display  = display,
     group    = group
 }
