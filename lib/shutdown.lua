@@ -35,17 +35,17 @@ system.settings = {
 }
 
 local function get_styles(styles)
-	local res = {
-		fg_normal = beautiful.bg_normal or styles.fg_normal or system.settings.fg_normal or "#232323",  --light black
-		bg_normal = beautiful.fg_normal or styles.bg_normal or system.settings.bg_normal or "#999999",  --light white
-		fg_focus = beautiful.fg_focus or styles.fg_focus or system.settings.fg_focus or "#ffffff",   --white
-		bg_focus = beautiful.bg_focus or styles.bg_focus or system.settings.bg_focus or "#b9214f",    --red
-		border_color = beautiful.bg_focus or styles.border_color or system.settings.border_color or "#b9214f",  --red
-		border_width = styles.border_width or system.settings.border_width or 3,
-		height = styles.height or system.settings.height or 50,
-		width  = styles.width or system.settings.width or 100,
-		font = styles.font or system.settings.font or "Sans 48"
-	}
+	local styles = styles or {}
+    local res = {}
+	res.fg_normal = styles.fg_normal or beautiful.bg_normal or system.settings.fg_normal or "#232323"  --light black
+	res.bg_normal = styles.bg_normal or beautiful.fg_normal or system.settings.bg_normal or "#999999"  --light white
+	res.fg_focus = styles.fg_focus or beautiful.fg_focus or system.settings.fg_focus or "#ffffff"   --white
+	res.bg_focus = styles.bg_focus or beautiful.bg_focus or system.settings.bg_focus or "#b9214f"    --red
+	res.border_color = styles.border_color or beautiful.bg_focus or system.settings.border_color or "#b9214f"  --red
+	res.border_width = styles.border_width or system.settings.border_width or 3
+	res.height = styles.height or system.settings.height or 5
+	res.width  = styles.width or system.settings.width or 100
+	res.font = styles.font or system.settings.font or "Sans 48"
 		
 	return res
 end
