@@ -34,22 +34,25 @@ local function client_info(c)
     local signy = (cc.y > 0 and "+") or ""
     v = string.format('<span color="%s">', colors.header) .. v .. " @ " .. cc.width .. 'x' .. cc.height .. signx .. cc.x .. signy .. cc.y .. "</span>\n\n"
 
+    local aw_inf = {
+        "overwrite_class"
+    }
     local inf = {
-            "name", "icon_name", "type", "class", "overwrite_class", "role", "instance", "pid",
+        "name", "icon_name", "type", "class", "role", "instance", "pid",
         "skip_taskbar", "id", "group_window", "leader_id", "machine",
         "screen", "hidden", "minimized", "size_hints_honor", "titlebar", "urgent",
         "focus", "opacity", "ontop", "above", "below", "fullscreen", "transient_for",
         "maximixed_horizontal", "maximixed_vertical", "sticky", "modal", "focusable"
     }
+    
     local longest = 0
     for _, key in ipairs(inf) do
         longest = math.max(longest, string.len(key))
     end
+    for _, key in ipairs(aw_inf) do
+        longest = math.max(longest, string.len(key))
+    end
     ---- Make table with client informations
-    --local infos = {}
-    --for i = 1, #inf do
-        --infos[inf[i]] = tostring(c[inf[i]])
-    --end
     
     local alignement = ''
     if settings.left_align then
@@ -58,9 +61,17 @@ local function client_info(c)
         alignement = '+'
     end
     
+    awful.client.property.get(c, "overwrite_class")
+
+    for i = 1, #aw_inf do
+        local prop = awful.client.property.get(c, aw_inf[i])
+        v = v .. '<span color="' .. colors.name .. '">' .. string.format('%' .. alignement .. longest .. 's', aw_inf[i]) .. 
+                string.format('</span> = <span color="%s">%s</span>\n', colors.doc, prop)
+    end
     for i = 1, #inf do
+        local prop = tostring(c[inf[i]])
         v = v .. '<span color="' .. colors.name .. '">' .. string.format('%' .. alignement .. longest .. 's', inf[i]) .. 
-                string.format('</span> = <span color="%s">%s</span>\n', colors.doc, tostring(c[inf[i]]))
+                string.format('</span> = <span color="%s">%s</span>\n', colors.doc, prop)
     end
     text = string.format('<span font="%s">%s</span>', settings.font, v:sub(1, #v-1))
 
