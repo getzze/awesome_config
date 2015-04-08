@@ -3,6 +3,7 @@
 -- Standard awesome library
 local gears = require("gears")
 local awful = require("awful")
+--require("lib/patch_move_client")
 awful.rules = require("awful.rules")
 require("awful.autofocus")
 -- Widget and layout library
@@ -148,9 +149,8 @@ tyrannical.tags = {
         name        = "edit",
         init        = false,
         exclusive   = true,
-        screen      = 1,
-        clone_on    = 2, -- Create a single instance of this tag on screen 1, but also show it on screen 2
-                         -- The tag can be used on both screen, but only one at once
+        screen      = screen.count()>1 and 2 or 1,-- Setup on screen 2 if there is more than 1 screen, else on screen 1
+        --force_screen = true,
         layout      = awful.layout.suit.max                          ,
         class ={ 
             "Kate", "KDevelop", "Codeblocks", "Code::Blocks" , "DDD", "kate4", "geany"}
@@ -160,12 +160,27 @@ tyrannical.tags = {
         init        = false, -- This tag wont be created at startup, but will be when one of the
                              -- client in the "class" section will start. It will be created on
                              -- the client startup screen
-        no_focus_stealing_out = true,
         screen      = screen.count()>1 and 2 or 1,-- Setup on screen 2 if there is more than 1 screen, else on screen 1
+        --force_screen = true,
+        --clone_on    = 1, -- Create a single instance of this tag on screen 1, but also show it on screen 2
+                         ---- The tag can be used on both screen, but only one at once
+        no_focus_stealing_out = true,
+        layout      = awful.layout.suit.max,
+        class       = { "libreoffice" }   
+    } ,
+    {
+        name        = "presentation",
+        init        = false, -- This tag wont be created at startup, but will be when one of the
+                             -- client in the "class" section will start. It will be created on
+                             -- the client startup screen
+        screen      = screen.count()>1 and 2 or 1,-- Setup on screen 2 if there is more than 1 screen, else on screen 1
+        force_screen = true,
+        selected    = true,
+        volatile    = true,
+        no_focus_stealing_out = true,
         layout      = awful.layout.suit.max,
         class       = {
-            "libreoffice",   "openoffice",    "soffice", "Soffice", "LibreOffice", "LibreOffice 4.3", 
-            "libreoffice-writer",  "libreoffice-base",  "libreoffice-impress", "libreoffice-calc", "libreoffice-draw", "libreoffice-math", "libreoffice-startcenter",   }
+            "libreoffice-fullscreen"}
     } ,
     {
         name        = "doc",
@@ -180,6 +195,8 @@ tyrannical.tags = {
         name        = "mpl",
         init        = false, 
         exclusive   = false,
+        screen      = screen.count()>1 and 2 or 1,-- Setup on screen 2 if there is more than 1 screen, else on screen 1
+        force_screen = true,
         no_focus_stealing_out = true,
         class       = { "mpl"  }
     } ,
@@ -208,16 +225,21 @@ tyrannical.properties.floating = {
 
 -- Make the matching clients (by classes) on top of the default layout
 tyrannical.properties.ontop = {
-    "synapse"      , "Xephyr"       , "ksnapshot"       , "kruler"
+    "synapse"      , "Xephyr"       , "ksnapshot"       , "kruler",  "libreoffice-fullscreen"
+}
+
+-- Make the matching clients (by classes) fullscreen
+tyrannical.properties.fullscreen = {
+    "libreoffice-fullscreen"
 }
 
 -- Force the matching clients (by classes) to be centered on the screen on init
 tyrannical.properties.centered = {
-    "kcalc"
+    "kcalc", "libreoffice-fullscreen"
 }
 
 -- Allow focus on the matching clients (by classes)
-tyrannical.properties.focusablex = {
+tyrannical.properties.focusable = {
     "Kate",     "KDevelop",     "Codeblocks",   "Code::Blocks" ,    "DDD",  "kate4",    "geany",
     "skype",    "deadbeef"
 }
@@ -648,7 +670,7 @@ clientkeys = awful.util.table.join(
     awful.key({ altkey,           }, "F4",     function (c) c:kill() end      , "Kill"),
     awful.key({ modkey, "Control" }, "space",  awful.client.floating.toggle   , "Toggle floating"),
     awful.key({ modkey, "Control" }, "Return", function (c) c:swap(awful.client.getmaster()) end,  "Switch with master"),
-    --awful.key({ modkey,           }, "o",      awful.client.movetoscreen                        ),
+    awful.key({ modkey,           }, "o",      awful.client.movetoscreen                        ),
     awful.key({ modkey,           }, "F5",     function (c) c.maximized=false awful.client.movetoscreen(c) c.maximized=true end,  "Move to other screen"),
     awful.key({ modkey,           }, "t",      function (c) c.ontop = not c.ontop  end, "Raise window"),
     awful.key({ modkey, "Shift"   }, "t",      awful.titlebar.toggle, "Toggle titlebar"),
@@ -695,7 +717,27 @@ awful.rules.rules = {
         callback = function(c)
                 awful.client.property.set(c, "overwrite_class", "mpl")
             end
-    } 
+    },
+    -- Tyrannical: match libreoffice different windows
+    {   rule_any = { class = { "openoffice",    "soffice", "Soffice", "LibreOffice",
+                "libreoffice-writer",  "libreoffice-base",  "libreoffice-impress", "libreoffice-calc", "libreoffice-draw", "libreoffice-math", "libreoffice-startcenter"  }},
+        callback = function(c)
+                awful.client.property.set(c, "overwrite_class", "libreoffice")
+            end
+    },
+    {   rule = { name = "LibreOffice 4.3", class = "Soffice", type = "normal"},
+        callback = function(c)
+                awful.client.property.set(c, "overwrite_class", "libreoffice-fullscreen")
+                --c.fullscreen = true
+                --naughty.notify({ text="Rename tag prologue" , screen = mouse.screen })
+            end,
+        properties = { 
+            fullscreen = true,  -- does not seem to work
+            skip_taskbar = true,
+            maximized = true,
+            focusable = true}
+    },
+    nil  -- stopper
 }
 -- }}}
 
