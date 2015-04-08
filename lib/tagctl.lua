@@ -107,7 +107,7 @@ local function add_tag_prompt(prompt)
     local p = prompt or settings.prompt
     if not p then return end
 
-    local props = {selected = true}
+    local props = {selected = true, volatile=true}
 
     local textbox = p[s].widget
     awful.prompt.run(
@@ -129,7 +129,7 @@ local function add_tag_inplace(taglist)
     local tagl = taglist or settings.taglist
     if not tagl then return end
 
-    local props = {selected = true}
+    local props = {selected = true, volatile=true}
 
     new_t = awful.tag.add(" ", props)
     rename_tag_inplace(new_t, tagl)
