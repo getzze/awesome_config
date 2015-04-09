@@ -4,7 +4,8 @@
 --   * awful.client.movetotag
 --   * tyrannical.focus_client
 -- Load this patch after loading awful and tyrannical in your configuration file
-local awful     = require("awful")
+local awful      = require("awful")
+local tyrannical = require("tyrannical")
 
 local capi      = {
    client = client
