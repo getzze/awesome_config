@@ -2,10 +2,8 @@
 -- List of patched functons:
 --   * awful.client.movetoscreen
 --   * awful.client.movetotag
---   * tyrannical.focus_client
 -- Load this patch after loading awful and tyrannical in your configuration file
 local awful      = require("awful")
-local tyrannical = require("tyrannical")
 
 local capi      = {
    client = client
@@ -13,7 +11,6 @@ local capi      = {
 
 local orig_movetotag    = awful.client.movetotag
 local orig_movetoscreen = awful.client.movetoscreen
-local orig_focus_client = tyrannical.focus_client
 
 local function reload_max (c)
     if c.maximized then
@@ -55,16 +52,6 @@ local function movetoscreen(c, s)
     reload_max(sel)
 end
 
--- Replacement for tyrannical.focus_client
-function focus_client(c,properties)
-    local success = orig_focus_client(c, properties)
-    if success then
-        reload_max(c)
-    end
-    return success
-end
-
 -- Monkey patch
 awful.client.movetotag    = movetotag
 awful.client.movetoscreen = movetoscreen
-tyrannical.focus_client = focus_client

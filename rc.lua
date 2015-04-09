@@ -18,7 +18,6 @@ local xdg_menu = require("archmenu")
 --local shifty = require("awesome-shifty")
 local tyrannical = require("tyrannical")
 local tagctl     = require("lib/tagctl")
-require("lib/patch_move_client")
 -- apw - pulseaudio integration
 local APW = require("apw/widget")
 -- Other widgets and layout library
@@ -173,7 +172,7 @@ tyrannical.tags = {
         init        = false, -- This tag wont be created at startup, but will be when one of the
                              -- client in the "class" section will start. It will be created on
                              -- the client startup screen
-        screen      = screen.count()>1 and 2 or 1,-- Setup on screen 2 if there is more than 1 screen, else on screen 1
+        screen      = 2,     -- Setup on screen 2 if there is more than 1 screen, else on screen 1
         force_screen = true,
         selected    = true,
         volatile    = true,
@@ -732,7 +731,7 @@ awful.rules.rules = {
                 --naughty.notify({ text="Rename tag prologue" , screen = mouse.screen })
             end,
         properties = { 
-            fullscreen = true,  -- does not seem to work
+            --fullscreen = true,  -- does not seem to work
             skip_taskbar = true,
             maximized = true,
             focusable = true}
@@ -742,6 +741,31 @@ awful.rules.rules = {
 -- }}}
 
 -- {{{ Signals
+-- Patch change screen for fullscreen
+local function client_reload_max(c)
+    local c = c or client.focus
+    if not c then return end
+    if c.maximized then
+        --naughty.notify({text="Maximized ! " .. c.name, screen=c.screen})
+        c.maximized = false
+        c.maximized = true
+    else
+        if c.maximized_horizontal then
+            c.maximized_horizontal = false
+            c.maximized_horizontal = true
+        end
+        if c.maximized_vertical then
+            c.maximized_vertical = false
+            c.maximized_vertical = true
+        end
+    end
+    if c.fullscreen then
+        --naughty.notify({text="Fullscreen ! " .. c.name, screen=c.screen})
+        c.fullscreen = false
+        c.fullscreen = true
+    end
+end
+
 -- Signal function to execute when a new client appears.
 client.connect_signal("manage", function (c, startup)
     -- Enable sloppy focus
@@ -751,17 +775,6 @@ client.connect_signal("manage", function (c, startup)
             client.focus = c
         end
     end)
-    
-    --c.add_signal("manage", function(c) c:add_signal("property::urgent", urgent.add) end)
-    c:connect_signal("property::urgent", awful.client.urgent.add)
-    --c:connect_signal("property::urgent", function (c)
-            --local c_urgent = client.urgent.get()
-            --local client_tag = c_urgent:tags()[1]
-            --naughty.notify({ preset = naughty.config.presets.critical,
-                 --title = "Urgent tag !",
-                 --text = "Oh yeah" })
-    --end)  
-    
     
     if not startup then
         -- Set the windows at the slave,
@@ -817,9 +830,16 @@ client.connect_signal("manage", function (c, startup)
     end
 end)
 
+-- Connect change screen signal to a resize function
+client.connect_signal("property::screen", client_reload_max)
+
 -- Connect urgent signal from client
-client.connect_signal("property::urgent", awful.client.urgent.add)
-client.connect_signal("manage", function(c) c:connect_signal("property::urgent", awful.client.urgent.add) end)
+client.connect_signal("property::urgent", function(c)
+    local c = c or client.urgent
+    if not c then return end
+    --naughty.notify({text="Urgent ! " .. c.name, screen=c.screen})
+    c.urgent = true
+end)
 
 client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
