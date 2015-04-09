@@ -25,3 +25,15 @@ The libraries come from various sources, including:
 
 With a screenshot:
 ![screen shot](https://github.com/downloads/getzze/awesome_config/screenshot.png)
+
+To use it, just clone this repository and install the submodules:
+```
+cd ~/.config
+git clone https://github.com/getzze/awesome_config
+mv awesome_config awesome
+cd awesome
+# Update submodules
+git submodule update --init --recursive
+# Generate menu with xdg-menu
+xdg_menu --format awesome --root-menu /etc/xdg/menus/arch-applications.menu >~/.config/awesome/archmenu.lua
+```
