@@ -3,7 +3,6 @@
 -- Standard awesome library
 local gears = require("gears")
 local awful = require("awful")
---require("lib/patch_move_client")
 awful.rules = require("awful.rules")
 require("awful.autofocus")
 -- Widget and layout library
@@ -19,6 +18,7 @@ local xdg_menu = require("archmenu")
 --local shifty = require("awesome-shifty")
 local tyrannical = require("tyrannical")
 local tagctl     = require("lib/tagctl")
+require("lib/patch_move_client")
 -- apw - pulseaudio integration
 local APW = require("apw/widget")
 -- Other widgets and layout library
