@@ -6,7 +6,7 @@
 	url = https://github.com/Mic92/vicious
 [submodule "tyrannical"]
 	path = tyrannical
-	url = https://github.com/getzze/tyrannical
+	url = https://github.com/Elv13/tyrannical
 [submodule "lain"]
 	path = lain
 	url = https://github.com/copycat-killer/lain
