@@ -24,10 +24,11 @@ local settings = {
 }
 
 local function get_styles(styles)
-	local res = {
-		color_group = beautiful.keydoc_color_group or styles.color_group or settings.color_group or "#b9214f",   -- red
-		color_keys  = beautiful.keydoc_color_keys or styles.color_keys or settings.color_keys or "#77DFD8",    -- cyan
-		color_doc   = beautiful.keydoc_color_doc or styles.color_doc or settings.color_doc or "#E0E0D1",      -- white
+	local styles = styles or settings or {}
+    local res = {
+		color_group = styles.color_group or settings.color_group or beautiful.keydoc_color_group or "#b9214f",   -- red
+		color_keys  = styles.color_keys or settings.color_keys or beautiful.keydoc_color_keys or "#77DFD8",    -- cyan
+		color_doc   = styles.color_doc or settings.color_doc or beautiful.keydoc_color_doc or "#E0E0D1",      -- white
 		font = styles.font or settings.font or "DejaVu Sans Mono 10"
 	}
 	return res
@@ -100,7 +101,7 @@ local function markup(keys)
     -- Compute longest key combination
     local longest = 0
     for _, key in ipairs(keys) do
-        if keydoc.__real[key] then
+        if doc[key] then
             longest = math.max(longest, unilen(key2str(key)))
         end
     end
