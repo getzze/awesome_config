@@ -26,18 +26,23 @@ local function name2tags(name, scr)
     if #ret > 0 then return ret end
 end
 
-local function name2tag(name, scr, idx)
+local function find_tag(name, scr)
     local ts = name2tags(name, scr)
     if ts then return ts[idx or 1] end
 end
 
 -- Launch program if tag not already opened
-local function raise_or_new_tag(name, cmd)
+local function raise_or_new_tag(name, cmd, all_screens)
+    local all_screens = all_screens
     local function fun()
-        local scr = capi.mouse.screen
-        local tag = name2tag(name, scr)
+        local scr = nil
+        if not all_screens then
+            scr = capi.mouse.screen
+        end
+        local tag = find_tag(name, scr)
         if tag then
             awful.tag.viewonly(tag)
+            awful.screen.focus(awful.tag.getscreen(tag))
         else
             awful.util.spawn(cmd)
         end

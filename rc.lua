@@ -117,7 +117,7 @@ tyrannical.tags = {
         exclusive   = true,
         screen      = 1,                  -- Create this tag on screen 1
       --icon        = "~net.png",                 -- Use this icon for the tag (uncomment with a real path)
-        exec_once   = browser,
+        --exec_once   = browser,
         layout      = awful.layout.suit.max,      -- Use the max layout
         class = {
             "Opera"         , "Firefox"        , "Rekonq"    , "Dillo"        , "Arora",
@@ -128,7 +128,7 @@ tyrannical.tags = {
         init        = false,
         exclusive   = true,
         screen      = 1,                  -- Create this tag on screen 1
-        exec_once   = mail,
+        --exec_once   = mail,
         layout      = awful.layout.suit.max,      -- Use the max layout
         class = {
             "Thunderbird", "davmail"}
@@ -605,12 +605,12 @@ globalkeys = awful.util.table.join(
     
     keydoc.group("Programs"),
 	-- Add keybinding to tag opening, attached to a program 
-    awful.key({ altkey },  "b",      ro.raise_or_new_tag('web', browser),               "Browser" ),        -- open firefox 
-    awful.key({ altkey },  "m",      ro.raise_or_new_tag('mail', mail),                 "Mail" ),           -- open thunderbird
-    awful.key({ altkey },  "f",      ro.raise_or_new_tag('files', file_manager),        "Files" ),          -- open file manager
-    awful.key({ altkey },  "g",      ro.raise_or_new_tag('edit', visual_edit),          "Editor" ),         -- open geany
-    awful.key({ altkey },  "x",      ro.raise_or_new_tag('term', terminal),             "Terminal" ),       -- go to terminal tag
-	awful.key({ altkey },  "Escape", function () awful.util.spawn(system_monitor) end,  "System monitor" ), -- open system-monitor
+    awful.key({ altkey },  "b",      ro.raise_or_new_tag('web', browser, true),                "Browser" ),        -- open firefox 
+    awful.key({ altkey },  "m",      ro.raise_or_new_tag('mail', mail, true),                  "Mail" ),           -- open thunderbird
+    awful.key({ altkey },  "f",      ro.raise_or_new_tag('files', file_manager),               "Files" ),          -- open file manager
+    awful.key({ altkey },  "e",      ro.raise_or_new_tag('edit', visual_edit, true),           "Editor" ),         -- open geany
+    awful.key({ altkey },  "x",      ro.raise_or_new_tag('term', terminal),                    "Terminal" ),       -- go to terminal tag
+	awful.key({ altkey },  "Escape", function () awful.util.spawn(system_monitor) end,         "System monitor" ), -- open system-monitor
     
     awful.key({ modkey, },  "F1",  keydoc.display),     -- display keybinding
 	nil
@@ -837,7 +837,7 @@ client.connect_signal("property::screen", client_reload_max)
 client.connect_signal("property::urgent", function(c)
     local c = c or client.urgent
     if not c then return end
-    --naughty.notify({text="Urgent ! " .. c.name, screen=c.screen})
+    naughty.notify({text="Urgent : " .. c.name, screen=c.screen})
     c.urgent = true
 end)
 
