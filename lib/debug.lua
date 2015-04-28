@@ -65,16 +65,15 @@ local function client_info(c)
 
     for i = 1, #aw_inf do
         local prop = awful.client.property.get(c, aw_inf[i])
-        v = v .. '<span color="' .. colors.name .. '">' .. string.format('%' .. alignement .. longest .. 's', aw_inf[i]) .. 
-                string.format('</span> = <span color="%s">%s</span>\n', colors.doc, prop)
+        v = v .. '<span color="' .. colors.name .. '">' .. string.format('%' .. alignement .. longest .. 's', awful.util.escape(aw_inf[i])) .. 
+                string.format('</span> = <span color="%s">%s</span>\n', colors.doc, awful.util.escape(prop))
     end
     for i = 1, #inf do
         local prop = tostring(c[inf[i]])
-        v = v .. '<span color="' .. colors.name .. '">' .. string.format('%' .. alignement .. longest .. 's', inf[i]) .. 
-                string.format('</span> = <span color="%s">%s</span>\n', colors.doc, prop)
+        v = v .. '<span color="' .. colors.name .. '">' .. string.format('%' .. alignement .. longest .. 's', awful.util.escape(inf[i])) .. 
+                string.format('</span> = <span color="%s">%s</span>\n', colors.doc, awful.util.escape(prop))
     end
     text = string.format('<span font="%s">%s</span>', settings.font, v:sub(1, #v-1))
-
     naughty.notify{ text = text, timeout = 0, margin = 10, screen = c.screen }
 end
 
