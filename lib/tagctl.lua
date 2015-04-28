@@ -49,17 +49,14 @@ end
 
 -- @param prompt: a awful.widget.prompt() object
 local function rename_tag_prompt(tag, prompt)
-    naughty.notify({ text="Rename tag prologue" , screen = capi.mouse.screen })
     local s = capi.mouse.screen
     local t = tag or awful.tag.selected(s)
     if not t then return end
-    naughty.notify({ text="Rename tag. Tag?" , screen = capi.mouse.screen })
     local p = prompt or settings.prompt
     if not p then 
         naughty.notify({ text=print(settings) , screen = capi.mouse.screen })
         return
     end
-    naughty.notify({ text="Rename tag. Prompt?" , screen = capi.mouse.screen })
 
     local textbox = p[s].widget
     awful.prompt.run(
