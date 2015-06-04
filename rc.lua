@@ -60,6 +60,9 @@ visual_editor = "geany"
 file_manager = "thunar"
 editor_cmd = terminal .. " -e " .. editor
 
+-- Bug for multiple screen, to set separate screens instead of duplicates (clones)
+awful.util.spawn("xrandr --output VIRTUAL1 --off --output eDP1 --auto --pos 0x0 --rotate normal --output DP1 --auto --right-of eDP1 --output HDMI2 --off --output HDMI1 --off --output DP2 --off", false)
+
 -- Default modkey.
 -- Usually, Mod4 is the key with a logo between Control and Alt.
 -- If you do not like this or do not have such a key,
@@ -834,12 +837,12 @@ end)
 client.connect_signal("property::screen", client_reload_max)
 
 -- Connect urgent signal from client
-client.connect_signal("property::urgent", function(c)
-    local c = c or client.urgent
-    if not c then return end
-    naughty.notify({text="Urgent : " .. c.name, screen=c.screen})
-    c.urgent = true
-end)
+--client.connect_signal("property::urgent", function(c)
+    --local c = c or client.urgent
+    --if not c then return end
+    --naughty.notify({text="Urgent : " .. c.name, screen=c.screen})
+    --c.urgent = true
+--end)
 
 client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
