@@ -140,6 +140,7 @@ local function force_vga_output()
     local cmd = io.popen("xrandr --addmode DP2 1024x768")
     cmd = io.popen("xrandr --output DP2 --mode 1024x768")
     cmd = io.popen("xrandr --output DP2 --auto")
+    cmd:close()
 end
 
 
