@@ -85,6 +85,7 @@ function run(cmd)
 end
 
 -- Sets the volume of the default sink to vol from 0 to 1.
+local naughty = require("naughty")
 function pulseaudio:SetVolume(vol)
 	if vol > 1 then
 		vol = 1
@@ -94,11 +95,11 @@ function pulseaudio:SetVolume(vol)
 		vol = 0
 	end
 
-	vol = vol * 0x10000
-	-- set…
-	run(cmd .. " set-sink-volume " .. default_sink .. " " .. string.format("0x%x", vol))
+	vol = math.floor(vol * 0x10000)
+	-- set...
+    run(cmd .. " set-sink-volume " .. default_sink .. " " .. string.format("0x%x", vol))
 
-	-- …and update values
+	-- ...and update values
 	self:UpdateState()
 end
 
