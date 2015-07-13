@@ -673,7 +673,7 @@ clientkeys = awful.util.table.join(
     awful.key({ modkey, "Control" }, "space",  awful.client.floating.toggle   , "Toggle floating"),
     awful.key({ modkey, "Control" }, "Return", function (c) c:swap(awful.client.getmaster()) end,  "Switch with master"),
     awful.key({ modkey,           }, "o",      awful.client.movetoscreen                        ),
-    awful.key({ modkey,           }, "F5",     function (c) c.maximized=false awful.client.movetoscreen(c) c.maximized=true end,  "Move to other screen"),
+    awful.key({ modkey,           }, "F5",     function (c) c.maximized=false awful.client.movetoscreen(c) tyrannical.match_client(c) c.maximized=true end,  "Move to other screen"),
     awful.key({ modkey,           }, "t",      function (c) c.ontop = not c.ontop  end, "Raise window"),
     awful.key({ modkey, "Shift"   }, "t",      awful.titlebar.toggle, "Toggle titlebar"),
     awful.key({ modkey,           }, "n",
