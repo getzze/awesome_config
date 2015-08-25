@@ -61,7 +61,11 @@ file_manager = "thunar"
 editor_cmd = terminal .. " -e " .. editor
 
 -- Bug for multiple screen, to set separate screens instead of duplicates (clones)
-awful.util.spawn("xrandr --output VIRTUAL1 --off --output eDP1 --auto --pos 0x0 --rotate normal --output DP1 --auto --right-of eDP1 --output HDMI2 --off --output HDMI1 --off --output DP2 --off", false)
+-- Curiously, this does not work perfectly when awesome is started but it is perfect when restarted
+-- a better solution is to modify xorg.conf
+--awful.util.spawn("xrandr --output eDP1 --auto --primary --output DP1 --auto --left-of eDP1 --output HDMI2 --off --output HDMI1 --off --output DP2 --off --output VIRTUAL1 --off", false)
+--awful.screen.focus(screen["eDP1"].index)
+
 
 -- Default modkey.
 -- Usually, Mod4 is the key with a logo between Control and Alt.
@@ -109,6 +113,7 @@ tyrannical.tags = {
         exclusive   = true,                   -- Refuse any other type of clients (by classes)
         screen      = {1,2},                  -- Create this tag on screen 1 and 2
         layout      = awful.layout.suit.tile, -- Use the tile layout
+        --exec_once   = {terminal},            -- When the tag is accessed for the first time, execute this command
         selected    = true,
         class       = { --Accept the following classes, refuse everything else (because of "exclusive=true")
             "xterm" , "urxvt" , "aterm","URxvt","XTerm","konsole","terminator","gnome-terminal"
@@ -850,16 +855,14 @@ client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_n
 
 
 -- {{{ Startup
--- Startup programs
+-- Startup programs in ~/.config/autostart
 awful.util.spawn("setxkbmap int")
+ro.xrun()
 ro.run_once(terminal)
-ro.run_once("cbatticon","-u 30 -i symbolic -x gnome-power-statistics")
-ro.run_once("synapse","--startup")
---ro.run_once("xfce4-power-manager")
-ro.run_once("caffeine")
-ro.run_once("nm-applet","--sm-disable")
-ro.run_once("davmail", nil, "java")
---run_once("davmail")
+--ro.run_once("nm-applet","--sm-disable")
+--ro.run_once("synapse","--startup")
+--ro.run_once("cbatticon","-u 30 -i symbolic -x gnome-power-statistics")
+--ro.run_once("caffeine")
+--ro.run_once_lua("davmail", nil, "java")
+--ro.run_once_lua("redshift-gtk")
 -- }}}
-
-
