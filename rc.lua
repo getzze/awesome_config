@@ -167,6 +167,7 @@ tyrannical.tags = {
         init        = false, -- This tag wont be created at startup, but will be when one of the
                              -- client in the "class" section will start. It will be created on
                              -- the client startup screen
+        exclusive   = true,
         screen      = screen.count()>1 and 2 or 1,-- Setup on screen 2 if there is more than 1 screen, else on screen 1
         --force_screen = true,
         --clone_on    = 1, -- Create a single instance of this tag on screen 1, but also show it on screen 2
@@ -677,8 +678,8 @@ clientkeys = awful.util.table.join(
     awful.key({ altkey,           }, "F4",     function (c) c:kill() end      , "Kill"),
     awful.key({ modkey, "Control" }, "space",  awful.client.floating.toggle   , "Toggle floating"),
     awful.key({ modkey, "Control" }, "Return", function (c) c:swap(awful.client.getmaster()) end,  "Switch with master"),
-    awful.key({ modkey,           }, "o",      awful.client.movetoscreen                        ),
-    awful.key({ modkey,           }, "F5",     function (c) c.maximized=false awful.client.movetoscreen(c) tyrannical.match_client(c) c.maximized=true end,  "Move to other screen"),
+    awful.key({ modkey,           }, "o",      function (c) awful.client.movetoscreen(c) tyrannical.match_client(c) end,  "Move to next screen"),
+    awful.key({ modkey,           }, "F5",     function (c) awful.client.movetoscreen(c) tyrannical.match_client(c) c.fullscreen=true end,  "Move to next screen and fullscreen"),
     awful.key({ modkey,           }, "t",      function (c) c.ontop = not c.ontop  end, "Raise window"),
     awful.key({ modkey, "Shift"   }, "t",      awful.titlebar.toggle, "Toggle titlebar"),
     awful.key({ modkey,           }, "n",
@@ -743,7 +744,7 @@ awful.rules.rules = {
     --{   rule = { name = "LibreOffice 4.4", class = "Soffice", type = "normal"},
         callback = function(c)
                 awful.client.property.set(c, "overwrite_class", "libreoffice-fullscreen")
-                --c.fullscreen = true
+                c.fullscreen = true
                 --naughty.notify({ text="Rename tag prologue" , screen = mouse.screen })
             end,
         properties = { 
