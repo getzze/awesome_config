@@ -51,7 +51,7 @@ local function raise_or_new_tag(name, cmd, all_screens)
 end
 
 -- Start program if not running already from pgrep command
-function run_once(prg, arg_string, pname)
+function run_once(prg, arg_string, pname, screen)
     if not prg then
         do return nil end
     end
@@ -59,13 +59,16 @@ function run_once(prg, arg_string, pname)
     if not pname then
        pname = prg
     end
-
+    -- Move to screen
+    screen = screen or capi.mouse.screen
+    awful.screen.focus(screen)
     if not arg_string then 
         --awful.util.spawn_with_shell("pgrep -u $USER -f '" .. pname .. "' || (" .. prg .. ")")
         awful.util.spawn_with_shell("pgrep -u $USER -x '" .. pname .. "' || (" .. prg .. ")")
     else
         awful.util.spawn_with_shell("pgrep -u $USER -x '" .. pname .. "' || (" .. prg .. " " .. arg_string .. ")")
     end
+    
 end
 
 require("lfs") 
