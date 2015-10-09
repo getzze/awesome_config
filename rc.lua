@@ -708,6 +708,13 @@ clientbuttons = awful.util.table.join(
 root.keys(globalkeys)
 -- }}}
 
+-- Handle LibreOffice fullscreen windows
+local function get_libreoffice_fullscreen_name()
+    local string = require("string")
+    local name = awful.util.pread("libreoffice --version")
+    name = string.match(name, "LibreOffice [0-9]*.[0-9]*")
+    return name
+end
 
 -- {{{ Rules
 awful.rules.rules = {
@@ -732,7 +739,8 @@ awful.rules.rules = {
                 awful.client.property.set(c, "overwrite_class", "libreoffice")
             end
     },
-    {   rule = { name = "LibreOffice 4.3", class = "Soffice", type = "normal"},
+    {   rule = { name = get_libreoffice_fullscreen_name(), class = "Soffice", type = "normal"},
+    --{   rule = { name = "LibreOffice 4.4", class = "Soffice", type = "normal"},
         callback = function(c)
                 awful.client.property.set(c, "overwrite_class", "libreoffice-fullscreen")
                 --c.fullscreen = true
