@@ -783,7 +783,7 @@ client.connect_signal("manage", function (c, startup)
             client.focus = c
         end
     end)
-    
+
     if not startup then
         -- Set the windows at the slave,
         -- i.e. put it at the end of others instead of setting it master.
@@ -858,7 +858,7 @@ client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_n
 -- Startup programs in ~/.config/autostart
 awful.util.spawn("setxkbmap int")
 ro.xrun()
-ro.run_once(terminal)
+ro.run_once(terminal, nil, nil, 1)
 --ro.run_once("nm-applet","--sm-disable")
 --ro.run_once("synapse","--startup")
 --ro.run_once("cbatticon","-u 30 -i symbolic -x gnome-power-statistics")
