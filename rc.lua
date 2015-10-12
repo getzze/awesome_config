@@ -842,7 +842,7 @@ client.connect_signal("manage", function (c, startup)
 
         awful.titlebar(c):set_widget(layout)
     end
-    if (c.type == "normal" or c.type == "dialog" or c.type == "splash" or c.type == "desktop") then
+    if (c.type == "normal" or c.type == "dialog" or c.type == "splash" or c.type == "desktop" or c.type == "toolbar") then
         awful.titlebar.hide(c)
     end
 end)
