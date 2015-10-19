@@ -205,7 +205,7 @@ tyrannical.tags = {
         exclusive   = false,
         screen      = screen.count()>1 and 2 or 1,-- Setup on screen 2 if there is more than 1 screen, else on screen 1
         force_screen = true,
-        no_focus_stealing_out = true,
+        no_focus_stealing_in = true,
         class       = { "mpl"  }
     } ,
     --{
