@@ -76,20 +76,20 @@ theme.transparent = transparent
 theme.font          = "Droid Sans 8"
 
 theme.bg_normal     = light_black 
-theme.bg_focus      = red 
+theme.bg_focus      = red
 theme.bg_urgent     = bright_red
 theme.bg_minimize   = light_black
 theme.bg_systray    = theme.bg_normal 
 
 theme.fg_normal     = light_white
-theme.fg_focus      = white 
-theme.fg_urgent     = white
+theme.fg_focus      = white
+theme.fg_urgent     = black
 --theme.fg_minimize   = black
 theme.fg_minimize   = blue
 
 theme.border_width  = 0 
-theme.border_normal = "#232323"
-theme.border_focus  = "#999999"
+theme.border_normal = light_black
+theme.border_focus  = light_white
 theme.border_marked = theme.bg_normal
 
 -- There are other variable sets
@@ -100,10 +100,12 @@ theme.border_marked = theme.bg_normal
 -- tooltip_[font|opacity|fg_color|bg_color|border_width|border_color]
 -- mouse_finder_[color|timeout|animate_timeout|radius|factor]
 -- Example:
-theme.tasklist_bg_focus = light_black 
-theme.tasklist_fg_focus = yellow 
-theme.titlebar_bg_normal = light_black
-theme.titlebar_bg_focus  = light_black 
+theme.tasklist_bg_focus    = light_grey
+theme.tasklist_fg_focus    = yellow 
+theme.tasklist_bg_minimize = bright_blue
+theme.tasklist_fg_minimize = black
+theme.titlebar_bg_normal   = light_black
+theme.titlebar_bg_focus    = light_black 
 
 --theme.taglist_bg_normal= "#333333"
 --theme.titlebar_bg_normal =
@@ -182,9 +184,9 @@ theme.awesome_icon = theme_dir .. "/awesome.png"
 
 -- Define the icon theme for application icons. If not set then the icons 
 -- from /usr/share/icons and /usr/share/icons/hicolor will be used.
-theme.icon_theme = "~/.icons/AwOkenDark" 
+--theme.icon_theme = "~/.icons/AwOkenDark" 
 theme.blingbling = {
-    background_color = "#00000000",
+    background_color = transparent,
     graph_background_color = widget_background,
     graph_color = bright_magenta,
     graph_line_color = magenta,
