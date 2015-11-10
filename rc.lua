@@ -217,7 +217,8 @@ tyrannical.tags = {
 
 -- Ignore the tag "exclusive" property for the following clients (matched by classes)
 tyrannical.properties.intrusive = {
-    "synapse"       , "ksnapshot"     , "pinentry"       , "gtksu"     , "kcalc"        , "xcalc"               ,
+    "synapse"       , "albert"         ,
+    "ksnapshot"     , "pinentry"       , "gtksu"     , "kcalc"        , "xcalc"               ,
     "feh"           , "Gradient editor", "About KDE" , "Paste Special", "Background color"    ,
     "kcolorchooser" , "plasmoidviewer" , "Xephyr"    , "kruler"       , "plasmaengineexplorer",  "Conky",
 }
@@ -233,7 +234,7 @@ tyrannical.properties.floating = {
 
 -- Make the matching clients (by classes) on top of the default layout
 tyrannical.properties.ontop = {
-    "synapse"      , "Xephyr"       , "ksnapshot"       , "kruler",  "libreoffice-fullscreen"
+    "synapse"      , "albert"       , "Xephyr"       , "ksnapshot"    , "kruler"       , "libreoffice-fullscreen"
 }
 
 -- Make the matching clients (by classes) fullscreen
