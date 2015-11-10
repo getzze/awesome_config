@@ -717,15 +717,58 @@ local function get_libreoffice_fullscreen_name()
     return name
 end
 
+local function create_titlebar(c)
+    -- Widgets that are aligned to the left
+    local left_layout = wibox.layout.fixed.horizontal()
+    left_layout:add(awful.titlebar.widget.iconwidget(c))
+
+    -- Widgets that are aligned to the right
+    local right_layout = wibox.layout.fixed.horizontal()
+    right_layout:add(awful.titlebar.widget.floatingbutton(c))
+    right_layout:add(awful.titlebar.widget.maximizedbutton(c))
+    right_layout:add(awful.titlebar.widget.stickybutton(c))
+    right_layout:add(awful.titlebar.widget.ontopbutton(c))
+    right_layout:add(awful.titlebar.widget.closebutton(c))
+
+    -- The title goes in the middle
+    local title = awful.titlebar.widget.titlewidget(c)
+    title:buttons(awful.util.table.join(
+            awful.button({ }, 1, function()
+                client.focus = c
+                c:raise()
+                awful.mouse.client.move(c)
+            end),
+            awful.button({ }, 3, function()
+                client.focus = c
+                c:raise()
+                awful.mouse.client.resize(c)
+            end)
+            ))
+
+    -- Now bring it all together
+    local layout = wibox.layout.align.horizontal()
+    layout:set_left(left_layout)
+    layout:set_right(right_layout)
+    layout:set_middle(title)
+
+    awful.titlebar(c):set_widget(layout)
+    
+end
+
 -- {{{ Rules
 awful.rules.rules = {
     -- All clients will match this rule.
     {   rule = { },
+        callback = create_titlebar,
         properties = { border_width = beautiful.border_width,
                     border_color = beautiful.border_normal,
                     focus = awful.client.focus.filter,
                     keys = clientkeys,
                     buttons = clientbuttons }
+    },
+    -- Hide titlebar on some window types
+    {   rule_any = { type = {"normal", "dialog", "utility", "splash", "desktop", "toolbar"} },
+        callback = function(c) create_titlebar(c); awful.titlebar.hide(c) end
     },
     -- Tyrannical: match matplotlib figures using the `overwrite_class` feature
     {   rule = { class = "", name = "Figure %d"  },
@@ -783,6 +826,7 @@ local function client_reload_max(c)
     end
 end
 
+
 -- Signal function to execute when a new client appears.
 client.connect_signal("manage", function (c, startup)
     -- Enable sloppy focus
@@ -805,46 +849,8 @@ client.connect_signal("manage", function (c, startup)
         end
     end
 
-    local titlebars_enabled = true
-    if titlebars_enabled then
-        -- Widgets that are aligned to the left
-        local left_layout = wibox.layout.fixed.horizontal()
-        left_layout:add(awful.titlebar.widget.iconwidget(c))
-
-        -- Widgets that are aligned to the right
-        local right_layout = wibox.layout.fixed.horizontal()
-        right_layout:add(awful.titlebar.widget.floatingbutton(c))
-        right_layout:add(awful.titlebar.widget.maximizedbutton(c))
-        right_layout:add(awful.titlebar.widget.stickybutton(c))
-        right_layout:add(awful.titlebar.widget.ontopbutton(c))
-        right_layout:add(awful.titlebar.widget.closebutton(c))
-
-        -- The title goes in the middle
-        local title = awful.titlebar.widget.titlewidget(c)
-        title:buttons(awful.util.table.join(
-                awful.button({ }, 1, function()
-                    client.focus = c
-                    c:raise()
-                    awful.mouse.client.move(c)
-                end),
-                awful.button({ }, 3, function()
-                    client.focus = c
-                    c:raise()
-                    awful.mouse.client.resize(c)
-                end)
-                ))
-
-        -- Now bring it all together
-        local layout = wibox.layout.align.horizontal()
-        layout:set_left(left_layout)
-        layout:set_right(right_layout)
-        layout:set_middle(title)
-
-        awful.titlebar(c):set_widget(layout)
-    end
-    if (c.type == "normal" or c.type == "dialog" or c.type == "splash" or c.type == "desktop" or c.type == "toolbar") then
-        awful.titlebar.hide(c)
-    end
+    -- Create titlebar
+    --create_titlebar(c)
 end)
 
 -- Connect change screen signal to a resize function
