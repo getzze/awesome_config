@@ -674,23 +674,18 @@ end
 -- Client related keys
 clientkeys = awful.util.table.join(
     keydoc.group("Client specific"),
-    awful.key({ modkey,           }, "f",      function (c) c.fullscreen = not c.fullscreen  end   , "Fullscreen"),
-    --awful.key({ modkey, "Shift"   }, "c",      function (c) c:kill()                         end),
-    awful.key({ altkey,           }, "F4",     function (c) c:kill() end      , "Kill"),
-    awful.key({ modkey, "Control" }, "space",  awful.client.floating.toggle   , "Toggle floating"),
-    awful.key({ modkey, "Control" }, "Return", function (c) c:swap(awful.client.getmaster()) end,  "Switch with master"),
-    awful.key({ modkey,           }, "o",      function (c) awful.client.movetoscreen(c) tyrannical.match_client(c) end,  "Move to next screen"),
+    awful.key({ modkey,           }, "o" ,     function (c) awful.client.movetoscreen(c) tyrannical.match_client(c) end,  "Move to next screen"),
     awful.key({ modkey,           }, "F5",     function (c) awful.client.movetoscreen(c) tyrannical.match_client(c) c.fullscreen=true end,  "Move to next screen and fullscreen"),
-    awful.key({ modkey,           }, "t",      function (c) c.ontop = not c.ontop  end, "Raise window"),
-    awful.key({ modkey, "Shift"   }, "t",      awful.titlebar.toggle, "Toggle titlebar"),
-    awful.key({ modkey,           }, "n",
-        function (c)
-            -- The client currently has the input focus, so it cannot be
-            -- minimized, since minimized clients can't have the focus.
-            c.minimized = true
-        end,
-        "Minimize"  ),
-    awful.key({ modkey,           }, "m",
+    --awful.key({ modkey, "Shift"   }, "c" ,     function (c) c:kill()                         end),
+    awful.key({ altkey,           }, "F4",     function (c) c:kill() end      , "Kill"),
+    awful.key({ modkey, "Control" }, "Return", function (c) c:swap(awful.client.getmaster()) end,  "Switch with master"),
+
+    awful.key({ modkey, "Control" }, "f" ,     awful.client.floating.toggle   , "Toggle floating"),
+    awful.key({ modkey,           }, "f" ,     function (c) c.fullscreen = not c.fullscreen  end   , "Fullscreen"),
+    awful.key({ modkey,           }, "t" ,     function (c) c.ontop = not c.ontop  end, "Raise window"),
+    awful.key({ modkey,           }, "d" ,     awful.titlebar.toggle, "Toggle decoration"),
+    awful.key({ modkey,           }, "n" ,     function (c) c.minimized = true end, "Minimize"  ),
+    awful.key({ modkey,           }, "m" ,
         function (c)
             c.maximized_horizontal = not c.maximized_horizontal
             c.maximized_vertical   = not c.maximized_vertical
