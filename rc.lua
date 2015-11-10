@@ -46,7 +46,7 @@ require("lib/errors")
 local home_dir = os.getenv("HOME")
 local config_dir = awful.util.getdir("config")
 local themes_dir = config_dir .. "/themes"
-local theme_dir = themes_dir .. "/japanese2"
+local theme_dir = themes_dir .. "/default"
 beautiful.init(theme_dir .. "/theme.lua")
 
 
