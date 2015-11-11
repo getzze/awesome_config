@@ -116,7 +116,7 @@ tyrannical.tags = {
         --exec_once   = {terminal},            -- When the tag is accessed for the first time, execute this command
         selected    = true,
         class       = { --Accept the following classes, refuse everything else (because of "exclusive=true")
-            "xterm" , "urxvt" , "aterm","URxvt","XTerm","konsole","terminator","gnome-terminal"
+            "xterm" , "urxvt" , "aterm","URxvt","XTerm","konsole","terminator","gnome-terminal","Sakura","Urxvt-tabbed"
         }
     } ,
     {
