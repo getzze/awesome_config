@@ -51,7 +51,8 @@ beautiful.init(theme_dir .. "/theme.lua")
 
 
 -- This is used later as the default terminal and editor to run.
-terminal = "terminator"
+terminal = "sakura"
+--terminal = "terminator"
 browser = "firefox"
 mail = "thunderbird"
 system_monitor = "gnome-system-monitor"
