@@ -517,8 +517,9 @@ globalkeys = awful.util.table.join(
             --end, "Lua prompt"),
 
     -- Menubar
-    awful.key({ modkey }, "p", function () menubar.show() end         , "Show app menu"     ),
-    awful.key({ modkey }, "w", function () mymainmenu:toggle() end    , "Show main menu"    ),
+    awful.key({ modkey },  "p" , function () menubar.show() end         , "Show app menu"        ),
+    awful.key({ modkey },  "w" , function () mymainmenu:toggle() end    , "Show main menu"       ),
+    awful.key({ modkey },  "F1", keydoc.display                         , "Display keybindings"  ),     -- display keybinding
 
 
     -- Tag view
@@ -622,7 +623,6 @@ globalkeys = awful.util.table.join(
     awful.key({ altkey },  "x",      ro.raise_or_new_tag('term', terminal),                    "Terminal" ),       -- go to terminal tag
 	awful.key({ altkey },  "Escape", function () awful.util.spawn(system_monitor) end,         "System monitor" ), -- open system-monitor
     
-    awful.key({ modkey, },  "F1",  keydoc.display),     -- display keybinding
 	nil
 )
 
