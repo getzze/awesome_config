@@ -16,7 +16,9 @@ local capi      = {
    mouse  = mouse
 }
 
-local settings = {
+--module("keydoc")
+
+settings = {
     color_keys   = "#E0E0D1",   -- white
     color_mods   = "#E0E0D1",   -- white
     color_doc    = "#77DFD8",   -- cyan
@@ -45,10 +47,12 @@ end
 
 
 --local doc = { }
-local hotkeys = {}
+local awful_hotkeys = {}
 local orig = awful.key.new
 local current_group = get_styles().default_group
-cached_awful_keys = {}
+local cached_awful_keys = {}
+local cached_total_keys = {}
+hotkeys = {}
 
 -- Start a new group
 function group(name)
@@ -75,7 +79,7 @@ local function new(_mod, key, press, release, data)
     if not hide_empty or (k and #k > 0 and data) then
         data.modifiers = _mod
         data.key = key
-        table.insert(hotkeys, data)
+        table.insert(awful_hotkeys, data)
     end
     return k
 end
@@ -95,6 +99,8 @@ end
 
 -- Turn a modifier to a string
 local function mod2str(mods)
+    if type(mods)=='string' then return mods end
+
     local result = ""
     if not mods or #mods == 0 then return result end
     local translate = {
@@ -129,7 +135,7 @@ local function unilen(str)
    return count
 end
 
-function linewrap(text, width, indent)
+local function linewrap(text, width, indent)
     local styles = get_styles()
 
     text = text or ""
@@ -166,6 +172,19 @@ function markup.keys(keys, longest)
     return result
 end
 
+local function get_keys_set(target)
+    local set = {}
+    local key = {}
+    for _, t in ipairs(target) do
+        key = {key=t.key, mods=t.mods}
+        set[key] = true
+    end
+    return set
+end
+
+local function make_key_table(data)
+    return {key=sym2str(data.key), mods=mod2str(data.modifiers), desc=data.description}
+end
 
 local function add_hotkey(data, target)
     local styles = get_styles()
@@ -174,16 +193,13 @@ local function add_hotkey(data, target)
     local group = data.group or styles.default_group
     --group_list[group] = true
     if not target[group] then target[group] = {} end
-    table.insert(
-        target[group],
-        {key=sym2str(data.key), mods=mod2str(data.modifiers), desc=data.description}
-    )
+    table.insert(target[group], make_key_table(data))
 end
 
 -- Generate a table sorted by key groups from awful.keys
 local function import_awful_keys()
     cached_awful_keys = {}
-    for _, data in pairs(hotkeys) do
+    for _, data in pairs(awful_hotkeys) do
         add_hotkey(data, cached_awful_keys)
     end
     table.sort(cached_awful_keys)
@@ -191,16 +207,43 @@ local function import_awful_keys()
 end
 
 local function awful_keys()
-    if #cached_awful_keys > 0 then
-        return cached_awful_keys
-    end
-    import_awful_keys()
+    if #cached_awful_keys == 0 then import_awful_keys() end
     return cached_awful_keys
+end
+
+-- Concatenate hotkeys from awful.keys and from custom list, the latter taking precedence
+local function generate_keys_table()
+    local total = {}
+
+    -- Insert awful hotkeys
+    for group, t in pairs(awful_keys()) do
+       total[group] = t
+    end
+
+    -- Insert custom hotkeys
+    for group,t in pairs(hotkeys) do
+        if not total[group] then total[group] = {} end
+        for _, v in ipairs(t) do
+            if type(v)=="table" and #v==3 then
+                table.insert(total[group], make_key_table({modifiers=v[1], key=v[2], description=v[3]}))
+            end
+        end
+    end
+
+    -- Copy to cache
+    table.sort(total)
+    cached_total_keys = total
+end
+
+local function get_hotkeys()
+    -- generate only if the cache does not exist
+    if #cached_total_keys == 0 then generate_keys_table() end
+    return cached_total_keys
 end
 
 -- Customize version of standard function pairs that sort keys
 -- (from Michal Kottman on Stackoverflow)
-function spairs(t, order)
+local function spairs(t, order)
 	-- collect the keys
 	local keys = {}
 	for k in pairs(t) do keys[#keys+1] = k end
@@ -223,7 +266,7 @@ function spairs(t, order)
 	end
 end
 
-function get_group_dimension(keys)
+local function get_group_dimension(keys)
     local height = #keys
     -- Compute width, i.e. longest key combination
     local width = 0
@@ -237,7 +280,7 @@ function get_group_dimension(keys)
     return {height=height, width=width, width_key=width_key}
 end
 
-function get_dimension(_table)
+local function get_dimension(_table)
     local height = 0
     local width = 0
     local width_key = 0
@@ -262,7 +305,8 @@ local nid = nil
 function display()
     local s = capi.mouse.screen
     local styles = get_styles()
-    table_keys = awful_keys()
+
+    table_keys = get_hotkeys()
 
     dim = get_dimension(table_keys)
     height, width, longest = dim.height, dim.width, dim.width_key
@@ -287,6 +331,7 @@ local keydoc =
 {
     settings     = settings,
     display      = display,
+    hotkeys      = hotkeys,    
     group        = group
 }
 return keydoc
