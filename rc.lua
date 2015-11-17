@@ -627,6 +627,16 @@ globalkeys = awful.util.table.join(
 	nil
 )
 
+-- Custom hotkeys
+keydoc.hotkeys["Programs"] = {
+        { { altkey   }, "space"   , "Synapse"          },
+        nil
+}
+keydoc.hotkeys["Tag manipulation"] = {
+        { { modkey   }, "#"       , "Move to tag #"    },
+        nil
+}
+
 -- Bind all key numbers to tags.
 -- Be careful: we use keycodes to make it works on any keyboard layout.
 -- This should map on the top row of your keyboard, usually 1 to 9.
@@ -864,7 +874,6 @@ client.connect_signal("property::screen", client_reload_max)
 client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
 -- }}}
-
 
 -- {{{ Startup
 -- Startup programs in ~/.config/autostart
