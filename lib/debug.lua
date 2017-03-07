@@ -3,17 +3,16 @@ local naughty       = require("naughty")
 local getmetatable  = getmetatable
 local beautiful     = require("beautiful")
 
-local capi = {
-    client = client,
-    mouse  = mouse
-}
+local capi = { client = client }
+
+local dbg = { prompt = nil }
 
 local colors = {
-    name   = beautiful.keydoc_color_keys or "#77DFD8",    -- cyan
-    doc    = beautiful.keydoc_color_doc or "#E0E0D1",      -- white
+    name   = beautiful.keydoc_color_keys  or "#77DFD8",   -- cyan
+    doc    = beautiful.keydoc_color_doc   or "#E0E0D1",   -- white
     header = beautiful.keydoc_color_group or "#b9214f",   -- red
-    count  = beautiful.fg_widget_label or "#E0E0D1",   -- white
-    index  = beautiful.fg_widget_label or "#A6E22E"   -- green
+    count  = beautiful.fg_widget_label    or "#E0E0D1",   -- white
+    index  = beautiful.fg_widget_label    or "#A6E22E"    -- green
 }
 
 local settings = {
@@ -21,7 +20,34 @@ local settings = {
     font = "DejaVu Sans Mono 8"
 }
 
-local function client_info(c)
+function dbg.debug_table(t, max_iter, prefix)
+    local text = ""
+    local prefix = prefix or ""
+    local max_iter = max_iter or 0
+    local val
+    for k, v in pairs( t ) do
+        if type(k) ~= "function" then
+            if type(v) == "number" or type(v) == "string" then
+                val = v
+            elseif type(v) == "boolean" then
+                val = tostring(v)
+            elseif type(v) == "table" then
+                if max_iter < 1 then
+                    val = type(v)
+                else
+                    val = "table ->\n" .. dbg.debug_table(v, max_iter - 1, prefix .. "  ..  ")
+                end
+            else
+                val = type(v)
+            end
+            text = text .. prefix .. k .. ": " .. val .. "\n"
+        end
+    end
+    return text
+end
+
+
+function dbg.client_info(c)
     local v = ""
 
     -- object
@@ -132,7 +158,7 @@ local function info(...)
         local desc = dbg_get(arg[i], depth, 3)
         text = text .. string.format("\n<span color='"..colors.index.."'>%2d</span> %s", i, desc)
         if type(arg[i]) == "client" then
-            client_info(arg[i])
+            dbg.client_info(arg[i])
             clients = clients + 1
         end
     end
@@ -144,7 +170,7 @@ end
 
 -- Simple function to load additional LUA files from rc/.
 -- from https://raw.githubusercontent.com/vincentbernat/awesome-configuration
-function loadrc(name, mod)
+function dbg.loadrc(name, mod)
     local success
     local result
    
@@ -191,7 +217,7 @@ local function load_code(code, environment)
     end
 end
 
-function lua_eval(s)
+local function lua_eval(s)
     local context = {}        -- create new environment
     setmetatable(context, {__index = _G})
     local f, err = load_code(s, context)
@@ -215,23 +241,20 @@ function lua_eval(s)
 				end
 			end
 			if highest_index > 0 then
-				naughty.notify({ title=">>> "..s, text = awful.util.escape(">: "..tostring(table.concat(ret, ", "))) , screen = capi.mouse.screen });
-                --mypromptbox[capi.mouse.screen].text = awful.util.escape("Result"..(highest_index > 1 and "s" or "")..": "..tostring(table.concat(ret, ", ")));
+				naughty.notify({ title=">>> "..s, text = awful.util.escape(">: "..tostring(table.concat(ret, ", "))) , screen=awful.screen.focused() });
 			else
-                naughty.notify({ title=">>> "..s, text=">: " , screen = capi.mouse.screen });
-				--mypromptbox[capi.mouse.screen].text = "Result: Nothing";
+                naughty.notify({ title=">>> "..s, text=">: " , screen=awful.screen.focused() });
 			end
 		else
 			err = ret[2];
 		end
 	end
 	if err then
-        naughty.notify({ title=">>> "..s, text=awful.util.escape(">: [Error] "..tostring(err)) , screen = capi.mouse.screen })
-		--mypromptbox[capi.mouse.screen].text = awful.util.escape("Error: "..tostring(err));
+        naughty.notify({ title=">>> "..s, text=awful.util.escape(">: [Error] "..tostring(err)) , screen=awful.screen.focused() })
 	end
 end
 
-function lua_completion (line, cur_pos, ncomp)
+local function lua_completion (line, cur_pos, ncomp)
     -- Only complete at the end of the line, for now
     if cur_pos ~= #line + 1 then
         return line, cur_pos
@@ -290,26 +313,23 @@ function lua_completion (line, cur_pos, ncomp)
     return str, cur_pos
 end
 
--- @param prompt: a awful.widget.prompt() object
-function lua_prompt(prompt)
-    local textbox = prompt.widget
+function dbg.get_prompt()
+    return dbg.prompt or awful.screen.focused().mypromptbox
+end
+
+
+function dbg.lua_prompt()
     local function f ()
-        awful.prompt.run({ prompt = "Run Lua code: " },
-            textbox,
-            lua_eval,
-            lua_completion,
-            awful.util.getdir("cache") .. "/history_eval")
+        awful.prompt.run {
+            prompt              = "Run Lua code: ",
+            textbox             = dbg.get_prompt().widget,
+            exe_callback        = lua_eval,
+            completion_callback = lua_completion,
+            history_path        = awful.util.get_cache_dir() .. "/history_eval"
+        }
     end
     return f
 end
 
-local dbg =
-{
-    settings    = settings,
-    colors      = colors,
-    loadrc      = loadrc,
-    --info        = info,
-    lua_prompt  = lua_prompt,
-    client_info = client_info
-}
+
 return dbg

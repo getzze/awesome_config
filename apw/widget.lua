@@ -36,12 +36,12 @@ local pulseaudio = require("apw.pulseaudio")
 
 local p = pulseaudio:Create()
 
-local pulseBar = awful.widget.progressbar()
+local pulseBar = wibox.widget.progressbar()
 
-pulseBar:set_width(width)
+pulseBar:set_forced_width(width)
 pulseBar.step = step
 
-local pulseWidget = wibox.layout.margin(pulseBar, margin_right, margin_left, margin_top, margin_bottom)
+local pulseWidget = wibox.container.margin(pulseBar, margin_right, margin_left, margin_top, margin_bottom)
 
 -- default colors overridden by Beautiful theme
 color = beautiful.apw_fg_color or color
@@ -99,9 +99,9 @@ function run_once(prg,arg_string,pname,screen)
     end
 
     if not arg_string then 
-        awful.util.spawn_with_shell("pgrep -f -u $USER -x '" .. pname .. "' || (" .. prg .. ")",screen)
+        awful.spawn.with_shell("pgrep -f -u $USER -x '" .. pname .. "' || (" .. prg .. ")",screen)
     else
-        awful.util.spawn_with_shell("pgrep -f -u $USER -x '" .. pname .. " ".. arg_string .."' || (" .. prg .. " " .. arg_string .. ")",screen)
+        awful.spawn.with_shell("pgrep -f -u $USER -x '" .. pname .. " ".. arg_string .."' || (" .. prg .. " " .. arg_string .. ")",screen)
     end
 end
 

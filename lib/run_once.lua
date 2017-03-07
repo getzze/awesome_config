@@ -1,50 +1,28 @@
 local awful         = require("awful")
 
 
-local capi = {
-    screen = screen,
-    client = client,
-    mouse  = mouse
-}
+local capi = { screen = screen }
 
-
--- {{{ Find tags (from https://github.com/pw4ever/awesome-wm-config/)
---name2tags: matches string 'name' to tag objects
---@param name: tag name to find
---@param scr: screen to look for tags on
---@return table of tag objects or nil
-local function name2tags(name, scr)
-    local ret = {}
-    local a, b = scr or 1, scr or capi.screen.count()
-    for s = a, b do
-        for _, t in ipairs(awful.tag.gettags(s)) do
-            if name == t.name then
-                table.insert(ret, t)
-            end
-        end
-    end
-    if #ret > 0 then return ret end
-end
-
-local function find_tag(name, scr)
-    local ts = name2tags(name, scr)
-    if ts then return ts[idx or 1] end
-end
 
 -- Launch program if tag not already opened
 local function raise_or_new_tag(name, cmd, all_screens)
     local all_screens = all_screens
     local function fun()
-        local scr = nil
+        local t = nil
         if not all_screens then
-            scr = capi.mouse.screen
-        end
-        local tag = find_tag(name, scr)
-        if tag then
-            awful.tag.viewonly(tag)
-            awful.screen.focus(awful.tag.getscreen(tag))
+            t = awful.tag.find_by_name(awful.screen.focused(), name)
         else
-            awful.util.spawn(cmd)
+            for s in capi.screen do
+                t = awful.tag.find_by_name(s, name)
+                if t then break end
+            end
+        end
+        
+        if t then
+            awful.screen.focus(t.screen)
+            t:view_only()
+        else
+            awful.spawn(cmd)
         end
     end
     return fun
@@ -60,15 +38,29 @@ function run_once(prg, arg_string, pname, screen)
        pname = prg
     end
     -- Move to screen
-    screen = screen or capi.mouse.screen
+    screen = screen or awful.screen.focused()
     awful.screen.focus(screen)
-    if not arg_string then 
-        --awful.util.spawn_with_shell("pgrep -u $USER -f '" .. pname .. "' || (" .. prg .. ")")
-        awful.util.spawn_with_shell("pgrep -u $USER -x '" .. pname .. "' || (" .. prg .. ")")
-    else
-        awful.util.spawn_with_shell("pgrep -u $USER -x '" .. pname .. "' || (" .. prg .. " " .. arg_string .. ")")
+    local cmd = prg
+    if arg_string then
+        cmd = cmd .. " " .. arg_string
     end
-    
+    --awful.spawn.with_shell("pgrep -u $USER -f '" .. pname .. "' || (" .. prg .. ")")
+    awful.spawn.with_shell("pgrep -u $USER -x '" .. pname .. "' >/dev/null || (" .. cmd .. ")")
+end
+
+-- Synchronous call of `cmd`
+local function pread(cmd)
+    -- Very bad, synchronous, but nothing better was found
+    if cmd and cmd ~= "" then
+        local f, err = io.popen(cmd, 'r')
+        if f then
+            local s = f:read("*all")
+            f:close()
+            return s
+        else
+            return err
+        end
+    end
 end
 
 require("lfs") 
@@ -104,22 +96,25 @@ function run_once_lua(process, cmd)
 	 return
       end
    end
-   return awful.util.spawn(cmd or process)
+   return awful.spawn(cmd or process)
 end
 
 -- Run DesktopEntry 
 function xrun()
-    local xresources_name = "awesome.started"
-    local xresources = awful.util.pread("xrdb -query")
-    if not xresources:match(xresources_name) then
-        -- Execute once for X server
-        awful.util.spawn("dex -a -e Awesome")
-        --os.execute("dex -a -e Awesome")
-    end
-    awful.util.spawn_with_shell("xrdb -merge <<< " .. "'" .. xresources_name .. ": true'")
+    awful.spawn.easy_async("xrdb -query", 
+        function(stdout, stderr, reason, exit_code) 
+            local xresources_name = "awesome.started"
+            if not stdout:match(xresources_name) then
+                -- Execute once for X server
+                awful.spawn("dex -a -e Awesome")
+            end
+            awful.spawn.with_shell("xrdb -merge <<< " .. "'" .. xresources_name .. ": true'")
+        end
+    )
 end
 
 return {
+    pread = pread,
     xrun = xrun,
     run_once = run_once,
     run_once_lua = run_once_lua,

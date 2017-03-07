@@ -1,192 +1,60 @@
 local awful     = require("awful")
-local naughty   = require("naughty")
-local beautiful = require("beautiful")
 
-local capi = {
-    client = client,
-    mouse  = mouse,
-    tag    = tag
-}
+local tagctl = { prompt = nil , mt = {} }
 
--- from https://github.com/pw4ever/awesome-wm-config
--- some of the routines are inspired by Shifty (https://github.com/bioe007/awesome-shifty.git)
--- taglist: table of awful.widget.taglist by screen
--- prompt: table of awful.widget.prompt by screen
-local settings = {
-    taglist = {},
-    prompt  = {}
-}
-
--- Call this function in rc.lua to be able to rename tags inplace, without prompt
-function set_taglist(taglist)
-    settings.taglist = taglist
+function tagctl.get_prompt()
+    return tagctl.prompt or awful.screen.focused().mypromptbox
 end
 
--- Call this function in rc.lua to be able to rename tags with the prompt
-function set_prompt(prompt)
-    settings.prompt = prompt
-end
+-- @param tag: a awful.tag object
+function tagctl.rename(tag)
+    awful.prompt.run {
+        prompt       = "New tag name: ",
+        textbox      = tagctl.get_prompt().widget,
+        exe_callback = function(new_name)
+            if not new_name or #new_name == 0 then return end
 
---@param tag: tag object to be moved
---@param idx: int; relative or absolute tag number
---@param rel_move: boolean; if true, idx is the relative index, otherwise absolute
-function move_tag(tag, idx, rel_idx)
-    if tag then 
-        local s = awful.tag.getscreen(tag)
-        local tag_idx = awful.tag.getidx(tag)
-        local tags = awful.tag.gettags(s)
-        local ind
-        if rel_idx then
-            ind = tag_idx + idx
-        else
-            ind = idx
+            local t = tag or awful.screen.focused().selected_tag
+            if t then t.name = new_name end
         end
-        local target = awful.util.cycle(#tags, ind)
-        awful.tag.move(target, tag)
-        awful.tag.viewonly(tag)
-    end
-end
-
--- @param prompt: a awful.widget.prompt() object
-local function rename_tag_prompt(tag, prompt)
-    local s = capi.mouse.screen
-    local t = tag or awful.tag.selected(s)
-    if not t then return end
-    local p = prompt or settings.prompt
-    if not p then 
-        naughty.notify({ text=print(settings) , screen = capi.mouse.screen })
-        return
-    end
-
-    local textbox = p[s].widget
-    awful.prompt.run(
-            { prompt = "New tag name: " },
-            textbox,
-            function(new_name)
-                if not new_name or #new_name == 0 then
-                    return
-                else
-                    t.name = new_name
-                end
-            end)
-end
-
-local function rename_tag_inplace(tag, taglist)
-    local s = capi.mouse.screen
-    local t = tag or awful.tag.selected(s)
-    if not t then return end
-    local tagl = taglist or settings.taglist
-    if not tagl then return end
-
-    local theme = beautiful.get()
-    if t == awful.tag.selected(s) then
-        local bg = theme.bg_focus or '#535d6c'
-    else
-        local bg = theme.bg_normal or '#222222'
-    end
-    local fg = theme.fg_urgent or '#ffffff'
-
-    local textbox = tagl[s].widgets[awful.tag.getidx(t)].widget.widgets[2].widget
-    awful.prompt.run({fg_cursor = fg, bg_cursor = bg,
-                ul_cursor = "single",
-                text = t.name,
-                selectall = true},
-        -- taglist internals -- found with the debug code above
-        textbox,
-        function (name)
-            t.name = name;
-        end)
+    }
 end
 
 -- @param prompt: 
-local function add_tag_prompt(prompt)
-    local s = capi.mouse.screen
-    local p = prompt or settings.prompt
-    if not p then return end
+function tagctl.add()
+    local s = awful.screen.focused()
 
-    local props = {selected = true, volatile=true}
+    local props = {selected = true, volatile=true, screen=s}
 
-    local textbox = p[s].widget
-    awful.prompt.run(
-            { prompt = "New tag name: " },
-            textbox,
-            function(new_name)
-                if not new_name or #new_name == 0 then
-                    return
-                else
-                    new_t = awful.tag.add(new_name, props)
-                    awful.tag.viewonly(new_t)
-                end
-            end)
+    awful.prompt.run {
+        prompt       = "New tag name: ",
+        textbox      = tagctl.get_prompt().widget,
+        exe_callback = function(new_name)
+            if not new_name or #new_name == 0 then return end
+            awful.tag.add(new_name, props):view_only()
+        end
+    }
 end
 
--- @param prompt: 
-local function add_tag_inplace(taglist)
-    local s = capi.mouse.screen
-    local tagl = taglist or settings.taglist
-    if not tagl then return end
+-- @param tag: a awful.tag object
+function tagctl.delete(tag)
+    local t = tag or awful.screen.focused().selected_tag
+    if not t then return end
+    t:delete()
+end
 
-    local props = {selected = true, volatile=true}
 
-    new_t = awful.tag.add(" ", props)
-    rename_tag_inplace(new_t, tagl)
-    if not new_t.name or #(new_t.new_name) == 0 then
-        awful.tag.delete(new_t)
-    else
-        awful.tag.viewonly(new_t)
+--@param ... table of tags to permute
+function tagctl.permute(...)
+    local args = { n=select('#', ...), ... }
+    if args.n == 0 then
+        args = awful.screen.focused().selected_tags
+        args.n = #args
+    end
+    if args.n < 2 then return end -- need at least two tags to permute
+    for i=2, args.n do
+       args[i]:swap(args[i-1])
     end
 end
 
-local function list_tags()
-    local s = capi.mouse.screen
-    local ret = {}
-    for i, t in ipairs(awful.tag.gettags(s)) do
-        ret[i] = t.name
-    end
-    return ret
-end
-
--- i is the index of target tag in variable `tags'
-local function swap_tags(tag1, tag2)
-   local s = capi.mouse.screen
-   --local from = capi.client.focus:tags()[1]
-   --local to = tags[screen][i]
-   if tag1 and tag2 then
-        t = tag2:clients()
-        for i, c in ipairs(tag1:clients()) do
-            awful.client.movetotag(tag2, c)
-        end
-        for i, c in ipairs(t) do
-            awful.client.movetotag(tag1, c)
-        end
-        --rename
-        local name1 = tag1.name
-        tag1.name = tag2.name
-        tag2.name = name
-   end
-end
-
-
-function delete()
-    awful.tag.delete()
-end
-
-function add(prompt)
-    add_tag_prompt(prompt)
-end
-
-function rename(prompt)
-    rename_tag_prompt(nil, prompt)
-end
-
-
-local tagctl =
-{
-    settings    = settings,
-    delete      = delete,
-    add         = add,
-    rename      = rename,
-    set_taglist = set_taglist,
-    set_prompt  = set_prompt
-}
 return tagctl
