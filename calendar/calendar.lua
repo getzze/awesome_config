@@ -11,10 +11,9 @@
 -- The `month` widget displays the calendar for the specified month, e.g. "12 2006",
 -- highlighting the specified day if the day is provided in the date, e.g. "22 12 2006".
 --
--- Cell and container styles can be overridden using the "fn_..." properties.
--- `fn_year_container` and `fn_month_container` can be used to define padding and borders for the widgets.
--- `fn_yearheader_cell`, `fn_header_cell`, `fn_weekdays_cell`, `fn_weeknumber_cell`, `fn_normal_cell`, `fn_focus_cell`
--- override the textbox creation for each type of cells.
+-- Cell and container styles can be overridden using the "fn_embed_[cell]" properties.
+-- `fn_embed_year`, `fn_embed_month`, `fn_embed_yearheader`, `fn_embed_header`, `fn_embed_weekdays`,
+-- can be used to define padding, border, shape, fg and bg colors to the widgets.
 --
 --@DOC_wibox_widget_defaults_calendar_EXAMPLE@
 --
@@ -28,18 +27,18 @@ local string = string
 local ipairs = ipairs
 local util = require("awful.util")
 local vertical = require("wibox.layout.fixed").vertical
-local grid = require("wibox.layout.grid")
+local grid = require("calendar/grid")
 local textbox = require("wibox.widget.textbox")
 local base = require("wibox.widget.base")
 local beautiful = require("beautiful")
 
-grid = grid or require("calendar/grid")
-
 local calendar = { mt = {} }
 
 local properties = { "date", "font", "spacing", "hide_year", "week_numbers", "start_sunday" ,
-                     "fn_year_container", "fn_month_container", "fn_yearheader_cell", "fn_header_cell",
-                     "fn_weekdays_cell", "fn_weeknumber_cell", "fn_normal_cell", "fn_focus_cell" }
+                     "fn_embed_year", "fn_embed_month", "fn_embed_yearheader", "fn_embed_header",
+                     "fn_embed_weekdays", "fn_embed_weeknumber", "fn_embed_normal", "fn_embed_focus",
+                     "markup_yearheader", "markup_header", "markup_weekdays", "markup_weeknumber",
+                     "markup_normal", "markup_focus"}
 
 
 --- The calendar font.
@@ -93,138 +92,117 @@ local properties = { "date", "font", "spacing", "hide_year", "week_numbers", "st
 -- @param boolean Hide year in header (default: false for month calendar, true for year calendar)
 -- @property hide_year
 
---- The month calendar container.
+--- Year header markup
+-- @param[opt=nil] nil|function|string A markup function, pattern
+-- (string containing "%s" to use with `string.format`) or nil (does not change the text).
+-- @property markup_yearheader
+
+--- Month header markup
+-- @param[opt=nil] nil|function|string A markup function, pattern
+-- (string containing "%s" to use with `string.format`) or nil (does not change the text).
+-- @property markup_header
+
+--- Week days markup
+-- @param[opt=nil] nil|function|string A markup function, pattern
+-- (string containing "%s" to use with `string.format`) or nil (does not change the text).
+-- @property markup_weekdays
+
+--- Week number markup
+-- @param[opt=nil] nil|function|string A markup function, pattern
+-- (string containing "%s" to use with `string.format`) or nil (does not change the text).
+-- @property markup_weeknumber
+
+--- Normal day markup
+-- @param[opt=nil] nil|function|string A markup function, pattern
+-- (string containing "%s" to use with `string.format`) or nil (does not change the text).
+-- @property markup_normal
+
+--- Current day markup
+-- @param[opt='<span foreground="'..beautiful.fg_focus..'" background="'..
+--beautiful.bg_focus..'"><b>%s</b></span>'] nil|function|string A markup function, pattern
+-- (string containing "%s" to use with `string.format`) or nil (does not change the text).
+-- @property markup_focus
+
+--- The month calendar encapsulating function.
 --
 -- Function that takes a widget as argument and returns another widget.
 --
--- Default value:
+-- Default value: function (widget) return widget end
 --
---    fn_month_container = function (widget)
---        return widget
---    end
---
---@DOC_wibox_widget_calendar_fn_month_container_EXAMPLE@
--- @param function Function to modify the month widget
--- @property fn_month_container
+--@DOC_wibox_widget_calendar_fn_embed_month_EXAMPLE@
+-- @param function Function to embed the month widget
+-- @property fn_embed_month
 
---- The year calendar container.
+--- The year calendar encapsulating function.
 --
 -- Function that takes a widget as argument and returns another widget.
 --
--- Default value:
+-- Default value: function (widget) return widget end
 --
---    fn_year_container = function (widget)
---        return widget
---    end
---
--- see `fn_month_container`.
--- @param function Function to modify the year widget
--- @property fn_year_container
+-- see `fn_embed_month`.
+-- @param function Function to embed the year widget
+-- @property fn_embed_year
 
---- The year header calendar cell.
+--- The year header cell encapsulating function.
 --
--- Function that takes a text and font as arguments and returns a widget.
+-- Function that takes a widget as argument and returns another widget.
 --
--- Default value:
+-- Default value: function (widget) return widget end
 --
---    fn_yearheader_cell = function (text, font)
---        local w = wibox.widget {
---            text = text,
---            font = font,
---            align = 'center',
---            valign = 'center',
---            widget = wibox.widget.textbox
---        }
---        return w
---    end
---
--- see `fn_header_cell`.
--- @param function Function to create the year header cell widget
--- @property fn_yearheader_cell
+-- see `fn_embed_header`.
+-- @param function Function to embed the year header cell
+-- @property fn_embed_yearheader
 
---- The month header calendar cell.
+--- The month header cell encapsulating function.
 --
--- Function that takes a text and font as arguments and returns a widget.
+-- Function that takes a widget as argument and returns another widget.
 --
--- Default value:
+-- Default value: function (widget) return widget end
 --
---    fn_yearheader_cell = function (text, font)
---        local w = wibox.widget {
---            text = text,
---            font = font,
---            align = 'center',
---            valign = 'center',
---            widget = wibox.widget.textbox
---        }
---        return w
---    end
---
---@DOC_wibox_widget_calendar_fn_header_cell_EXAMPLE@
--- @param function Function to create the month header cell widget
--- @property fn_header_cell
+--@DOC_wibox_widget_calendar_fn_embed_header_EXAMPLE@
+-- @param function Function to embed the month header cell
+-- @property fn_embed_header
 
---- The week days calendar cell.
+--- The week days cell encapsulating function.
 --
--- Function that takes a text and font as arguments and returns a widget.
+-- Function that takes a widget as argument and returns another widget.
 --
--- Default value:
+-- Default value: function (widget) return widget end
 --
---    fn_yearheader_cell = function (text, font)
---        local w = wibox.widget {
---            text = text,
---            font = font,
---            align = 'right',
---            valign = 'center',
---            widget = wibox.widget.textbox
---        }
---        return w
---    end
---
--- see `fn_header_cell`.
--- @param function Function to create the week days cell widget
--- @property fn_weekdays_cell
+-- see `fn_embed_header`.
+-- @param function Function to embed the week days cells
+-- @property fn_embed_weekdays
 
---- The week number calendar cell.
+--- The week number cell encapsulating function.
 --
--- Function that takes a text and font as arguments and returns a widget.
+-- Function that takes a widget as argument and returns another widget.
 --
--- Default value:
+-- Default value: function (widget) return widget end
 --
---    fn_yearheader_cell = function (text, font)
---        local w = wibox.widget {
---            text = text,
---            font = font,
---            align = 'right',
---            valign = 'center',
---            widget = wibox.widget.textbox
---        }
---        return w
---    end
---
--- see `fn_header_cell`.
--- @param function Function to create the week number cell widget
--- @property fn_weeknumber_cell
+-- see `fn_embed_header`.
+-- @param function Function to embed the week number cells
+-- @property fn_embed_weeknumber
 
---- The normal day calendar cell.
+--- The normal day cell encapsulating function.
 --
--- Function that takes a text and font as arguments and returns a widget.
+-- Function that takes a widget as argument and returns another widget.
 --
--- Default value:
+-- Default value: function (widget) return widget end
 --
---    fn_yearheader_cell = function (text, font)
---        local w = wibox.widget {
---            text = text,
---            font = font,
---            align = 'right',
---            valign = 'center',
---            widget = wibox.widget.textbox
---        }
---        return w
---    end
+-- see `fn_embed_header`.
+-- @param function Function to embed the normal day cells
+-- @property fn_embed_normal
+
+--- The current day cell encapsulating function.
 --
--- see `fn_header_cell`.
--- @param function Function to create the normal day cell widget
--- @property fn_normal_cell
+-- Function that takes a widget as argument and returns another widget.
+--
+-- Default value: function (widget) return widget end
+--
+-- see `fn_embed_header`.
+-- @param function Function to embed the current day cells
+-- @property fn_embed_focus
+
 
 --- The current day calendar cell.
 --
@@ -276,27 +254,39 @@ local function parse_date(date)
 end
 
 
+--- Make a textbox
+-- @tparam string text Text of the textbox
+-- @tparam string font Font of the text
+-- @tparam boolean center Center the text horizontally
+-- @treturn wibox.widget.textbox
+local function make_cell(text, font, center)
+    return base.make_widget_declarative {
+        markup = text,
+        align  = center and "center" or "right",
+        valign = 'center',
+        font   = font,
+        widget = textbox
+    }
+end
+
 --- Get default cell creation function
 -- @tparam table props Widget properties
 -- @tparam string flag Type of cell
+-- @tparam string text Text to display in the cell
 -- @treturn function
-local function default_cell(props, flag)
-    if props["fn_"..flag.."_cell"] then
-        return function(text) return props["fn_"..flag.."_cell"](text, props.font) end
-    else
-        return function(text) 
-                   local pattern = '<span foreground="%s" background="%s"><b>%s</b></span>'
-                   return base.make_widget_declarative {
-                       markup = (flag ~= "focus") and text
-                            or string.format(pattern, beautiful.fg_focus, beautiful.bg_focus, text),
-                       align  = (flag == "header" or flag == "yearheader") and "center" or "right",
-                       valign = 'center',
-                       font   = font,
-                       widget = textbox
-                   }
-               end
+local function default_cell(props, flag, text)
+    local markup = text
+    local m = props["markup_"..flag]
+    if type(m) == "function" then
+        markup = m(text)
+    elseif type(m) == "string" and string.find(m, "%s", 1, true) then
+        markup = string.format(m, text)
     end
+    local w = make_cell(markup, props.font, flag=="yearheader" or flag=="header")
+    return props["fn_embed_"..flag](w)
 end
+
+
 
 --- Create a grid layout with the month calendar
 -- @tparam table props Table of calendar properties
@@ -325,13 +315,13 @@ local function create_month(props, date)
     local column_day   = (d.wday - d.day + 1 - week_start ) % 7
 
     --local flags = {"header", "weekdays", "weeknumber", "normal", "focus"}
-    local t, i, j, w, flag, text
+    local t, i, j, w, flag, text, markup
 
     -- Header
     flag = "header"
     t = os.time{year=year, month=month, day=1}
     text = os.date(props.hide_year and "%B" or "%B %Y", t)
-    w = default_cell(props, flag)(text)
+    w = default_cell(props, flag, text)
     layout:add_widget_at(w, 1, 1, 1, num_columns)
 
     -- Week days
@@ -340,7 +330,7 @@ local function create_month(props, date)
         flag = "weekdays"
         t = os.time{year=2006, month=1, day=j-start_column+week_start}
         text = string.sub(os.date("%a", t), 1, 2)
-        w = default_cell(props, flag)(text)
+        w = default_cell(props, flag, text)
         layout:add_widget_at(w, i, j, 1, 1)
     end
 
@@ -354,7 +344,7 @@ local function create_month(props, date)
             text = os.date("%V", t)
             if tonumber(text) ~= current_week then
                 flag = "weeknumber"
-                w = default_cell(props, flag)(text)
+                w = default_cell(props, flag, text)
                 layout:add_widget_at(w, i, 1, 1, 1)
                 current_week = tonumber(text)
                 if j < start_column then j = start_column end
@@ -365,13 +355,13 @@ local function create_month(props, date)
         -- Focus day
         if day and day == d then flag = "focus" end
         text = string.format("%2d", d)
-        w = default_cell(props, flag)(text)
+        w = default_cell(props, flag, text)
         layout:add_widget_at(w, i, j, 1, 1)
 
         -- find next cell
         i,j = layout:get_next_empty(i,j)
     end
-    return props.fn_month_container and props.fn_month_container(layout) or layout
+    return props.fn_embed_month(layout)
 end
 
 
@@ -406,14 +396,14 @@ local function create_year(props, date)
 
     -- Create a vertical layout
     local flag, text = "yearheader", string.format("%s", year)
-    local year_header = default_cell(props, flag)(text)
+    local year_header = default_cell(props, flag, text)
     local out_layout = base.make_widget_declarative{
         year_header,
         in_layout,
         spacing = 2*props.spacing, -- separate header from calendar grid
         layout  = vertical
     }
-    return props.fn_year_container and props.fn_year_container(out_layout) or out_layout
+    return props.fn_embed_year(out_layout)
 end
 
 
@@ -519,6 +509,13 @@ local function get_calendar(t, date, font)
     ret._private.week_numbers = beautiful.calendar_week_numbers or false
     ret._private.start_sunday = beautiful.calendar_start_sunday or false
     ret._private.hide_year    = t == "year" and true or false
+
+    local containers = { "year", "month", "yearheader", "header", "weekdays", "weeknumber", "normal", "focus" }
+    for _, flag in pairs(containers) do
+        ret._private["fn_embed_" .. flag] = function (w) return w end
+    end
+    ret._private.markup_focus = string.format('<span foreground="%s" background="%s"><b>%s</b></span>', 
+                                    beautiful.fg_focus, beautiful.bg_focus, "%s")
 
     return ret
 end

@@ -19,7 +19,7 @@ local APW = require("apw/widget")
 -- Other widgets and layout library
 local vicious = require("vicious")
 --local blingbling = require("blingbling")
-local calendar = require("lib/calendar")
+local calendar = require("calendar")
 local lain = require("lain")
 -- Xrandr
 local xrandr = require("lib/xrandr")
@@ -365,8 +365,7 @@ cal = calendar.year {
                          border_color = "#de5e1e"
     },
     style_yearheader = { shape    = function(cr, width, height) gears.shape.rounded_rect(cr, width, height, 10) end,
-                         markup   = function(t) return '<b>' .. t .. '</b>' end,
-                         font     = "Monospace 32",
+                         markup   = function(t) return '<span font="Monospace 32"><b>' .. t .. '</b></span>' end,
                          padding  = 10,
                          fg_color = "#F7F7F7",
                          bg_color =  "#7788af"
@@ -406,9 +405,7 @@ tooltip_cal:attach(laintextclock)
 -- }
 
 -- Pacman Widget
-pacwidget = wibox.widget {
-    widget = wibox.widget.textbox,
-}
+pacwidget = wibox.widget.textbox()
 pacwidget_t = awful.tooltip({ objects = { pacwidget},})
 function pacwidget_t_update(widget, args)
     pacwidget_t:set_text(args[2])
@@ -424,8 +421,8 @@ pacwidget:buttons(awful.util.table.join(
             end)
 ))
 
-vicious.cache(vicious.widgets.pkg)
-vicious.register(pacwidget, vicious.widgets.pkg, pacwidget_t_update, 600, "Arch C")
+--vicious.cache(vicious.widgets.pkg)
+--vicious.register(pacwidget, vicious.widgets.pkg, pacwidget_t_update, 600, "Arch C")
 -- Update APW widget periodically, in case the volume is changed from somewhere else. 
 APWTimer = gears.timer({ timeout = 0.5 }) -- set update interval in s
 APWTimer:connect_signal("timeout", APW.Update)

@@ -3,7 +3,7 @@
 --
 -- Display a month or year calendar popup using `calendar.month` or `calendar.year`.
 -- The calendar style can be tweaked by providing tables of style properties at creation:
--- `style_year` and `style_month` (see `container_properties`); `style_yearheader`, `style_header`, 
+-- `style_year` and `style_month` (see `container_properties`); `style_yearheader`, `style_header`,
 -- `style_weekdays`, `style_weeknumber`, `style_normal`, `style_focus` (see `cell_properties`).
 --
 -- The wibox accepts arguments for the calendar widget: "font", "spacing", "week_numbers", "start_sunday".
@@ -31,10 +31,11 @@ local ascreen = require("awful.screen")
 local abutton = require("awful.button")
 local gears = require("gears")
 local wibox = require("wibox")
+local base = require("wibox.widget.base")
 local beautiful = require("beautiful")
 
-wibox.layout.grid = wibox.layout.grid or require("calendar.grid")
-wibox.widget.calendar = wibox.widget.calendar or require("calendar.calendar")
+wibox.layout.grid = wibox.layout.grid or require("calendar/grid")
+wibox.widget.calendar = wibox.widget.calendar or require("calendar/calendar")
 
 local calendar_popup = { offset = 0, mt = {} }
 
@@ -155,61 +156,44 @@ local style_properties = { "font", "fg_color", "bg_color", "shape", "markup", "a
 -- @table year_cells
 
 
-
---- Create and format a cell widget
--- @tparam table props Table of calendar cell properties
--- @tparam string text Text of the widget
--- @tparam string fb_font Fallback font
--- @treturn widget
-local function create_cell(props, text, fb_font)
-    local align  = props.align  or 'right'
-    local valign = props.valign or 'center'
-    local markup = type(props.markup) == "function" and props.markup or function(t) return t end
-    local font   = props.font or fb_font
-
-    local ret = wibox.widget {
-        {
-            {
-                markup = markup(text),
-                align  = align,
-                valign = valign,
-                font   = font,
-                widget = wibox.widget.textbox
-            },
-            margins = props.padding,
-            widget  = wibox.container.margin
-        },
-        fg      = props.fg_color,
-        bg      = props.bg_color,
-        shape   = props.shape,
-        opacity = props.opacity,
-        widget  = wibox.container.background
-    }
-    return ret
-end
-
 --- Create a container for the grid layout
 -- @tparam table props Table of calendar container properties.
 -- @tparam widget widget The grid layout to set in the container
 -- @treturn widget Container widget
-local function create_container(props, widget)
-    local ret = wibox.widget {
-        {
-            widget,
-            margins = props.padding + props.border_width,
-            widget  = wibox.container.margin
-        },
-        shape              = props.shape or gears.shape.rectangle,
-        shape_border_color = props.border_color,
-        shape_border_width = props.border_width,
-        fg                 = props.fg_color,
-        bg                 = props.bg_color,
-        opacity            = props.opacity,
-        widget             = wibox.container.background
-    }
-    return ret
+local function embed(props)
+    local function fn (widget)
+        local out = base.make_widget_declarative {
+            {
+                widget,
+                margins = props.padding + props.border_width,
+                widget  = wibox.container.margin
+            },
+            shape              = props.shape or gears.shape.rectangle,
+            shape_border_color = props.border_color,
+            shape_border_width = props.border_width,
+            fg                 = props.fg_color,
+            bg                 = props.bg_color,
+            opacity            = props.opacity,
+            widget             = wibox.container.background
+        }
+        return out
+    end
+    return fn
 end
 
+
+--- Parse the properties of the cell type and set default values
+-- @tparam string cell The cell type
+-- @tparam table vargs Table of properties to enforce
+-- @treturn table The properties table
+local function parse_markup(cell, vargs)
+    local args = (vargs or {})["style_" .. cell] or {}
+    local function do_nothing(t) return t end
+    local function do_focus(t) return "<b>" .. t .. "</b>" end
+    return args.markup or beautiful["calendar_" .. cell .. "_markup"]
+                                    or (beautiful.calendar_style_cell or {}).markup
+                                    or (cell == "focus" and do_focus or do_nothing)
+end
 
 --- Parse the properties of the cell type and set default values
 -- @tparam string cell The cell type
@@ -218,66 +202,34 @@ end
 local function parse_cell_options(cell, args)
     args = args or {}
     local props = {}
-    local function do_nothing(t) return t end
-    local function do_focus(t) return "<b>" .. t .. "</b>" end
+    local bl_style = beautiful.calendar_style_cell or {}
 
     -- style default values
-    props.font      = args.font     or beautiful["calendar_" .. cell .. "_font"]  -- no default, to allow fallback
     props.fg_color  = args.fg_color or beautiful["calendar_" .. cell .. "_fg_color"]
-                                    or (beautiful.calendar_style_cell or {})["fg_color"]
+                                    or bl_style.fg_color
                                     or (cell == "focus" and beautiful["fg_focus"] or beautiful["fg_normal"])
     props.bg_color  = args.bg_color or beautiful["calendar_" .. cell .. "_bg_color"]
-                                    or (beautiful.calendar_style_cell or {})["bg_color"]
+                                    or bl_style.bg_color
                                     or (cell == "focus" and beautiful["bg_focus"] or beautiful["bg_normal"])
     props.shape     = args.shape    or beautiful["calendar_" .. cell .. "_shape"]
-                                    or (beautiful.calendar_style_cell or {})["shape"]
+                                    or bl_style.shape
                                     or nil
-    props.markup    = args.markup   or beautiful["calendar_" .. cell .. "_markup"]
-                                    or (beautiful.calendar_style_cell or {})["markup"]
-                                    or (cell == "focus" and do_focus or do_nothing)
     props.padding   = args.padding  or beautiful["calendar_" .. cell .. "_padding"]
-                                    or (beautiful.calendar_style_cell or {})["padding"]
+                                    or bl_style.padding
                                     or 2
     props.opacity   = args.opacity  or beautiful["calendar_" .. cell .. "_opacity"]
-                                    or (beautiful.calendar_style_cell or {})["opacity"]
+                                    or bl_style.opacity
                                     or 1
-    props.align     = (cell == "header" or cell == "yearheader") and "center" or "right"
-    props.valign    = "center"
-    return props
-end
-
---- Parse the common properties of the month and year and set default values
--- @tparam string caltype Type of the calendar, `year` or `month`.
--- @tparam table args Table of properties to enforce
--- @treturn table The properties table
-local function parse_container_options(caltype, args)
-    local props = {}
-    props.padding      = args.padding       or beautiful["calendar_" .. caltype .. "_padding"]
-                                            or (beautiful["calendar_style_" .. caltype] or {})["padding"]
-                                            or 5
-    props.border_width = args.border_width  or beautiful["calendar_" .. caltype .. "_border_width"]
-                                            or (beautiful["calendar_style_" .. caltype] or {})["border_width"]
+    props.border_width = args.border_width  or beautiful["calendar_" .. cell .. "_border_width"]
+                                            or bl_style.border_width
                                             or beautiful.border_width
                                             or 0
-    props.border_color = args.border_color  or beautiful["calendar_" .. caltype .. "_border_color"]
-                                            or (beautiful["calendar_style_" .. caltype] or {})["border_color"]
+    props.border_color = args.border_color  or beautiful["calendar_" .. cell .. "_border_color"]
+                                            or bl_style.border_color
                                             or beautiful.border_normal
                                             or beautiful.fg_normal
-    props.fg_color     = args.fg_color      or beautiful["calendar_" .. caltype .. "_fg_color"]
-                                            or (beautiful["calendar_style_" .. caltype] or {})["fg_color"]
-                                            or beautiful.fg_normal
-    props.bg_color     = args.bg_color      or beautiful["calendar_" .. caltype .. "_bg_color"]
-                                            or (beautiful["calendar_style_" .. caltype] or {})["bg_color"]
-                                            or beautiful.bg_normal
-    props.shape        = args.shape         or beautiful["calendar_" .. caltype .. "_shape"]
-                                            or (beautiful["calendar_style_" .. caltype] or {})["shape"]
-                                            or nil
-    props.opacity      = args.opacity       or beautiful["calendar_" .. caltype .. "_opacity"]
-                                            or (beautiful["calendar_style_" .. caltype] or {})["opacity"]
-                                            or 1
     return props
 end
-
 
 
 --- Make the geometry of a wibox
@@ -420,30 +372,20 @@ local function get_cal_wibox(caltype, args)
         spacing      = args.spacing,
         week_numbers = args.week_numbers,
         start_sunday = args.start_sunday,
-        fn_month_container = function(w) 
-                                 return create_container(parse_container_options("month", args.style_month), w)
-                             end,
-        fn_year_container  = caltype == "year" and function(w) 
-                                 return create_container(parse_container_options("year" , args.style_year) , w) 
-                             end,
-        fn_header_cell     = function(text, font)
-                                 return create_cell(parse_cell_options("header"    , args.style_header)    , text, font)
-                             end,
-        fn_weekdays_cell   = function(text, font)
-                                 return create_cell(parse_cell_options("weekdays"  , args.style_weekdays)  , text, font)
-                             end,
-        fn_weeknumber_cell = function(text, font) 
-                                 return create_cell(parse_cell_options("weeknumber", args.style_weeknumber), text, font) 
-                             end,
-        fn_normal_cell     = function(text, font) 
-                                 return create_cell(parse_cell_options("normal"    , args.style_normal)    , text, font) 
-                             end,
-        fn_focus_cell      = function(text, font) 
-                                 return create_cell(parse_cell_options("focus"     , args.style_focus)     , text, font) 
-                             end,
-        fn_yearheader_cell = caltype == "year" and function(text, font) 
-                                 return create_cell(parse_cell_options("yearheader", args.style_yearheader), text, font) 
-                             end,
+        markup_header     = parse_markup("header", args),
+        markup_yearheader = parse_markup("yearheader", args),
+        markup_weekdays   = parse_markup("weekdays", args),
+        markup_weeknumber = parse_markup("weeknumber", args),
+        markup_normal     = parse_markup("normal", args),
+        markup_focus      = parse_markup("focus", args),
+        fn_embed_month      = embed(parse_cell_options("month", args.style_month)),
+        fn_embed_year       = embed(parse_cell_options("year", args.style_year)),
+        fn_embed_header     = embed(parse_cell_options("header", args.style_header)),
+        fn_embed_yearheader = embed(parse_cell_options("yearheader", args.style_yearheader)),
+        fn_embed_weekdays   = embed(parse_cell_options("weekdays", args.style_weekdays)),
+        fn_embed_weeknumber = embed(parse_cell_options("weeknumber", args.style_weeknumber)),
+        fn_embed_normal     = embed(parse_cell_options("normal", args.style_normal)),
+        fn_embed_focus      = embed(parse_cell_options("focus", args.style_focus)),
         widget = wibox.widget.calendar(caltype)
     }
     ret:set_widget(widget)
