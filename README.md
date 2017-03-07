@@ -21,7 +21,7 @@ The libraries in `/lib` come from various sources, including:
 * calendar.lua from [https://github.com/cedlemo/blingbling] and [lain](https://github.com/copycat-killer/lain)
 
 With a screenshot:
-![screen shot](https://github.com/downloads/getzze/awesome_config/screenshot.png)
+![screen shot](https://github.com/getzze/awesome_config/raw/master/screenshot.png)
 
 To use it, just clone this repository and install the submodules:
 ```
